@@ -1,72 +1,48 @@
-# Hope, Inc. Customer Management System
+# Hope CMS
 
-Sprint-based capstone application for managing Hope, Inc. customers and viewing purchase history. Customer records support controlled CRUD behavior with soft removal. Sales, sales detail, product, and price history records are read-only in the app.
+Sprint 1 — Weeks 1 & 2: Project setup, full CMS database, Email + Google OAuth, login guard.
 
-## Stack
+## Project overview
 
-- React 18 + Vite + TypeScript
-- Tailwind CSS
-- Supabase Auth, PostgreSQL, and SQL migrations
-- React Router v6
-- Vitest + React Testing Library
+- Vite + React 18 + Tailwind CSS front-end
+- Supabase JS client with `.env.example`
+- React Router v6 with protected routes
+- Professional login/register pages with modern split-screen styling
+- Placeholder CMS pages: `/customers`, `/sales`, `/products`, `/admin`, `/deleted-customers`, `/auth/callback`
+- Auth guard verifies `record_status === 'ACTIVE'`
 
-## Local Setup
+## Branch strategy
 
-1. Install dependencies:
+- `dev` is the main development branch
+- `main` is the protected production branch
+- `feature/*` used for each task or PR
+- All changes should go through pull requests
 
-   ```bash
-   npm install
-   ```
+## Local setup
 
-2. Create `.env` from `.env.example` and add Supabase credentials:
+1. `npm install`
+2. Copy `.env.example` to `.env`
+3. Fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+4. `npm run dev`
 
-   ```bash
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-   ```
+## Scripts
 
-3. Start the app:
+- `npm run dev` — start development server
+- `npm run build` — build production assets
+- `npm run lint` — run ESLint
+- `npm run test` — run unit tests
 
-   ```bash
-   npm run dev
-   ```
+## Supabase
 
-4. Run checks:
+- Use `src/lib/supabase.js` to initialize the client
+- Google OAuth and email/password auth are wired through `AuthContext`
 
-   ```bash
-   npm run build
-   npm run test
-   npm run lint
-   ```
+## Sprint deliverables
 
-## Sprint 1 Outputs
-
-- `src/lib/supabase.ts` initializes the Supabase JS client.
-- `src/contexts/AuthContext.tsx` handles sessions, email auth, Google OAuth, login guard, and inactive-account blocking.
-- `src/components/ProtectedRoute.tsx` blocks unauthenticated app access.
-- `src/components/AppShell.tsx` provides the CMS navbar and sidebar.
-- `src/pages` contains Login, Register, Auth Callback, and placeholder CMS pages.
-- `db/migrations` contains Sprint 1 SQL for schema, HopeDB seed row counts, rights seed, SUPERADMIN seed, and provisioning trigger.
-- `db/verify-seed.sql` checks row counts and foreign key gaps.
-- `docs/erd.md`, `docs/github-branching.md`, and `docs/sprint1-log.md` document Sprint 1 outputs.
-- `.github/pull_request_template.md` supports reviewed PRs into `dev`.
-
-## Branch Flow
-
-Use `feature/*`, `feat/*`, `db/*`, `test/*`, and `docs/*` branches. Merge feature branches into `dev` by Pull Request after teammate review. Release from `dev` to `main` by Pull Request only.
-
-## Sprint 1 PR Map
-
-- M1: `feat/project-scaffold`, `feat/supabase-client`, `feat/routing-skeleton`, `chore/github-protection`
-- M2: `feat/ui-login-page`, `feat/ui-register-page`, `feat/ui-app-shell`, `feat/ui-auth-callback`
-- M3: `db/initial-schema`, `db/rights-seed`, `docs/db-erd`, `db/verify-seed`
-- M4: `feat/auth-context`, `feat/auth-email`, `feat/auth-google`, `db/trigger-provision-user`
-- M5: `test/sprint1-auth-flows`, `docs/sprint1-log-readme`
-
-## Core Rules
-
-- Customer removals must set `record_status = 'INACTIVE'`.
-- USER accounts must only see ACTIVE customers.
-- ADMIN and SUPERADMIN can see inactive customers and recover them.
-- Sales, sales detail, product, and price history views stay read-only for every user type.
-- ADMIN must not alter a SUPERADMIN account.
+- `db/migrations/001_initial_schema.sql`
+- `db/migrations/002_rights_seed.sql`
+- `db/migrations/003_auth_provisioning.sql`
+- `db/migrations/004_hopedb_seed.sql`
+- `docs/erd.md`
+- `docs/sprint1-log.md`
+- `.github/PULL_REQUEST_TEMPLATE.md`
