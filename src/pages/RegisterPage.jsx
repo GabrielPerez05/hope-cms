@@ -21,8 +21,7 @@ export function RegisterPage() {
     if (!email.trim()) return "Please enter your email address.";
     if (!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email address.";
     if (!password) return "Please enter a password.";
-    if (password.length < 8)
-      return "Password must be at least 8 characters.";
+    if (password.length < 8) return "Password must be at least 8 characters.";
     return "";
   };
 
@@ -56,7 +55,7 @@ export function RegisterPage() {
         <p className="mt-2 text-sm text-slate-500">
           Register with email/password or Google.
         </p>
-        {(formError || error) ? (
+        {formError || error ? (
           <div className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
             {formError || error}
           </div>
