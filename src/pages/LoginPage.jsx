@@ -5,13 +5,34 @@ import { useAuth } from "../hooks/useAuth";
 export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState("");
   const { signIn, signInWithGoogle, error, loading, clearError } = useAuth();
   const navigate = useNavigate();
+
+  const validateLogin = () => {
+    if (!email.trim()) return "Please enter your email address.";
+    if (!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email address.";
+    if (!password) return "Please enter your password.";
+    if (password.length < 8) return "Password must be at least 8 characters.";
+    return "";
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     clearError();
-    await signIn(email, password);
+    setFormError("");
+
+    const validationError = validateLogin();
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+
+    const success = await signIn(email, password);
+    if (!success) {
+      return;
+    }
+
     navigate("/customers");
   };
 
@@ -22,9 +43,9 @@ export function LoginPage() {
         <p className="mt-2 text-sm text-slate-500">
           Sign in using email/password or Google OAuth.
         </p>
-        {error ? (
+        {(formError || error) ? (
           <div className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
-            {error}
+            {formError || error}
           </div>
         ) : null}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
