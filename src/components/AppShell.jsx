@@ -51,15 +51,15 @@ export function AppShell() {
 
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6">
         <aside
-          className={`fixed inset-x-0 top-20 z-20 transition-all duration-300 lg:static lg:translate-x-0 ${
-            isSidebarOpen ? "translate-y-0" : "-translate-y-full"
-          }`}
+          className={`fixed inset-x-0 top-20 z-20 transition-all duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-y-0" : "-translate-y-full"}`}
         >
           <div className="lg:sticky lg:top-24 lg:w-64 lg:rounded-3xl lg:border lg:border-slate-200 lg:bg-white lg:p-4 lg:shadow-sm">
             <div className="flex items-center justify-between bg-white p-4 shadow-sm lg:bg-transparent lg:p-0">
-              <p className="mb-0 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                CMS navigation
-              </p>
+              <div>
+                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  CMS navigation
+                </p>
+              </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}
                 className="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-200 lg:hidden"
@@ -103,8 +103,12 @@ export function AppShell() {
         <main className="flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:ml-72">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Workspace</p>
-              <h1 className="text-2xl font-semibold text-slate-900">Content management</h1>
+              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                Workspace
+              </p>
+              <h1 className="text-2xl font-semibold text-slate-900">
+                Content management
+              </h1>
             </div>
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
