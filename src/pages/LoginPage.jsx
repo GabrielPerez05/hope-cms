@@ -8,7 +8,6 @@ export function LoginPage() {
   const [formError, setFormError] = useState("");
 
   const { signIn, signInWithGoogle, error, loading, clearError } = useAuth();
-
   const navigate = useNavigate();
 
   const validateLogin = () => {
@@ -21,7 +20,6 @@ export function LoginPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     clearError();
     setFormError("");
 
@@ -32,109 +30,127 @@ export function LoginPage() {
     }
 
     const success = await signIn(email, password);
-    if (!success) {
-      return;
-    }
+    if (!success) return;
 
     navigate("/customers");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-2xl">
-        {/* Header */}
-        <div className="bg-emerald-600 px-8 py-10 text-white">
-          <h1 className="text-4xl font-bold tracking-tight">Hope CMS</h1>
+    <div className="min-h-screen bg-slate-950 px-4 py-10 text-white">
+      <div className="mx-auto grid max-w-6xl gap-8 overflow-hidden rounded-3xl bg-slate-900/95 shadow-2xl shadow-slate-950/40 lg:grid-cols-2">
+        <div className="hidden rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-950 p-12 text-slate-100 lg:flex lg:flex-col">
+          <div className="relative flex flex-1 flex-col justify-between">
+            <div>
+              <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-widest text-emerald-200">
+                Secure login
+              </span>
+              <h1 className="mt-8 text-5xl font-semibold leading-tight text-white">
+                Welcome back to Hope CMS
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-7 text-emerald-100/80">
+                Sign in to continue managing customers, inventory, and sales
+                from one polished workspace.
+              </p>
+            </div>
 
-          <p className="mt-2 text-emerald-100">Customer Management System</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl bg-white/10 p-5 shadow-xl shadow-black/10">
+                <p className="text-sm font-semibold text-white">Fast access</p>
+                <p className="mt-2 text-sm text-emerald-100/80">
+                  Sign in with email or Google.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-5 shadow-xl shadow-black/10">
+                <p className="text-sm font-semibold text-white">
+                  Modern interface
+                </p>
+                <p className="mt-2 text-sm text-emerald-100/80">
+                  Clean, professional design.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-8">
-          <h2 className="text-2xl font-semibold text-slate-800">
-            Welcome Back
-          </h2>
+        <div className="rounded-3xl bg-white p-10 shadow-2xl shadow-slate-950/20 text-slate-900">
+          <div className="mb-8 text-center">
+            <p className="text-sm uppercase tracking-[0.2em] text-emerald-400/90">
+              Sign In
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold text-slate-900">
+              Access your account
+            </h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Use your email and password or continue with Google.
+            </p>
+          </div>
 
-          <p className="mt-2 text-sm text-slate-500">
-            Sign in using your email and password
-          </p>
-
-          {/* Error */}
           {formError || error ? (
-            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="mb-6 rounded-3xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">
               {formError || error}
             </div>
           ) : null}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-            {/* Email */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Email Address
-              </label>
-
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <label className="block text-sm text-slate-700">
+              <span className="mb-2 block font-medium text-slate-500">
+                Email
+              </span>
               <input
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 type="email"
                 required
-                placeholder="Enter your email"
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                placeholder="you@example.com"
+                className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+            </label>
+            <label className="block text-sm text-slate-700">
+              <span className="mb-2 block font-medium text-slate-500">
                 Password
-              </label>
-
+              </span>
               <input
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 type="password"
                 required
                 placeholder="Enter your password"
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               />
-            </div>
+            </label>
 
-            {/* Login Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:from-emerald-400 hover:to-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-slate-200"></div>
-
-              <span className="text-sm text-slate-400">OR</span>
-
-              <div className="h-px flex-1 bg-slate-200"></div>
-            </div>
-
-            {/* Google Button */}
-            <button
-              type="button"
-              onClick={signInWithGoogle}
-              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-medium text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50"
-            >
-              Sign in with Google
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
-          {/* Footer */}
-          <p className="mt-8 text-center text-sm text-slate-500">
+          <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-widest text-slate-500">
+            <span className="h-px flex-1 bg-slate-700/70" />
+            <span>Or</span>
+            <span className="h-px flex-1 bg-slate-700/70" />
+          </div>
+
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:border-emerald-400/60 hover:bg-slate-800"
+          >
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-emerald-700">
+              G
+            </span>
+            Sign in with Google
+          </button>
+
+          <p className="mt-8 text-center text-sm text-slate-400">
             New to Hope CMS?{" "}
             <button
               type="button"
               onClick={() => navigate("/register")}
-              className="font-semibold text-emerald-600 hover:underline"
+              className="font-semibold text-white underline-offset-2 transition hover:text-emerald-200"
             >
               Create an account
             </button>
