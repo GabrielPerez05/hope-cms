@@ -121,9 +121,12 @@ export function AuthProvider({ children }) {
 
     if (authError) {
       setError(authError.message);
+      setLoading(false);
+      return false;
     }
 
     setLoading(false);
+    return true;
   }, []);
 
   const signInWithGoogle = useCallback(async () => {

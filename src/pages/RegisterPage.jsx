@@ -8,13 +8,44 @@ export function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState("");
   const { signUp, signInWithGoogle, error, loading, clearError } = useAuth();
   const navigate = useNavigate();
+
+  const validateRegister = () => {
+    if (!firstName.trim()) return "Please enter your first name.";
+    if (!lastName.trim()) return "Please enter your last name.";
+    if (!username.trim()) return "Please choose a username.";
+    if (username.trim().length < 3)
+      return "Username must be at least 3 characters.";
+    if (!email.trim()) return "Please enter your email address.";
+    if (!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email address.";
+    if (!password) return "Please enter a password.";
+    if (password.length < 8)
+      return "Password must be at least 8 characters.";
+    return "";
+  };
 
   const handleRegister = async (event) => {
     event.preventDefault();
     clearError();
-    await signUp(email, password, { firstName, lastName, username });
+    setFormError("");
+
+    const validationError = validateRegister();
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+
+    const success = await signUp(email, password, {
+      firstName,
+      lastName,
+      username,
+    });
+    if (!success) {
+      return;
+    }
+
     navigate("/auth/callback");
   };
 
@@ -25,9 +56,9 @@ export function RegisterPage() {
         <p className="mt-2 text-sm text-slate-500">
           Register with email/password or Google.
         </p>
-        {error ? (
+        {(formError || error) ? (
           <div className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
-            {error}
+            {formError || error}
           </div>
         ) : null}
         <form onSubmit={handleRegister} className="mt-6 space-y-4">
