@@ -10,18 +10,21 @@ import { SalesPage } from "./pages/SalesPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { DeletedCustomersPage } from "./pages/DeletedCustomersPage";
+import "./index.css";
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
+        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<AppShell />}>
-            <Route index element={<CustomersPage />} />
+            <Route index element={<Navigate to="/customers" replace />} />
             <Route path="customers" element={<CustomersPage />} />
             <Route path="sales" element={<SalesPage />} />
             <Route path="products" element={<ProductsPage />} />
@@ -33,6 +36,7 @@ function App() {
           </Route>
         </Route>
 
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </AuthProvider>
