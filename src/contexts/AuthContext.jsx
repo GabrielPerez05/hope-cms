@@ -3,9 +3,7 @@ import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { AuthContext } from "./auth-context";
 
 async function fetchAppUser(session) {
-  if (!session) {
-    return null;
-  }
+  if (!session) return null;
 
   const { data, error } = await supabase
     .from("user")
@@ -23,11 +21,11 @@ async function fetchAppUser(session) {
 function normalizeUser(userData) {
   if (!userData) return null;
   return {
-    id: userData.id,
+    id: userData.id || userData.userId,
     email: userData.email,
     username: userData.username || userData.email,
     user_type: userData.user_type || "USER",
-    record_status: userData.record_status || "ACTIVE",
+    record_status: userData.record_status || "INACTIVE", // Default to INACTIVE for safety
   };
 }
 
@@ -55,7 +53,7 @@ export function AuthProvider({ children }) {
       if (normalized?.record_status !== "ACTIVE") {
         await supabase.auth.signOut();
         setCurrentUser(null);
-        setError("Your account is pending activation or is inactive.");
+        setError("Your account is pending activation by a Sales Manager.");
         return;
       }
 
@@ -73,7 +71,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    const initialSession = supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       loadSession(data.session);
     });
 
@@ -88,102 +86,14 @@ export function AuthProvider({ children }) {
     };
   }, [loadSession]);
 
-  const signIn = useCallback(async (email, password) => {
-    setLoading(true);
-    setError(null);
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return false;
-    }
-
-    setLoading(false);
-    return true;
-  }, []);
-
-  const signUp = useCallback(async (email, password, metadata) => {
-    setLoading(true);
-    setError(null);
-
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata,
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return false;
-    }
-
-    setLoading(false);
-    return true;
-  }, []);
-
-  const signInWithGoogle = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        queryParams: {
-          access_type: "offline",
-        },
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-    }
-  }, []);
-
-  const signOut = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    await supabase.auth.signOut();
-    setCurrentUser(null);
-    setSession(null);
-    setLoading(false);
-  }, []);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
   const value = useMemo(
     () => ({
       currentUser,
       session,
       loading,
       error,
-      signIn,
-      signUp,
-      signInWithGoogle,
-      signOut,
-      clearError,
     }),
-    [
-      currentUser,
-      session,
-      loading,
-      error,
-      signIn,
-      signUp,
-      signInWithGoogle,
-      signOut,
-      clearError,
-    ],
+    [currentUser, session, loading, error],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
