@@ -16,32 +16,23 @@ export function AppShell() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="border-b bg-white/90 px-4 py-4 shadow-sm backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-50 text-slate-900">
+      <div className="border-b border-emerald-200 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-lg font-semibold">Hope CMS</p>
-            <p className="text-sm text-slate-500">
-              Sales and customer management console
+            <p className="text-lg font-semibold text-slate-900">Hope CMS</p>
+            <p className="text-sm text-emerald-600">
+              A polished emerald workspace for customer and sales management.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-sm text-slate-700 lg:hidden">
-            <button
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-              className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm transition hover:border-slate-300"
-            >
-              Menu
-            </button>
-          </div>
-
-          <div className="hidden items-center gap-3 text-sm text-slate-700 lg:flex">
-            <span>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-700">
+            <span className="rounded-full bg-emerald-100 px-3 py-2 font-medium text-emerald-800">
               {currentUser?.username || currentUser?.email || "Signed in"}
             </span>
             <button
               onClick={signOut}
-              className="rounded-md bg-slate-900 px-3 py-2 text-white transition hover:bg-slate-700"
+              className="rounded-2xl bg-emerald-700 px-3 py-2 text-white transition hover:bg-emerald-800"
             >
               Logout
             </button>
@@ -49,77 +40,113 @@ export function AppShell() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6">
-        <aside
-          className={`fixed inset-x-0 top-20 z-20 transition-all duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-y-0" : "-translate-y-full"}`}
-        >
-          <div className="lg:sticky lg:top-24 lg:w-64 lg:rounded-3xl lg:border lg:border-slate-200 lg:bg-white lg:p-4 lg:shadow-sm">
-            <div className="flex items-center justify-between bg-white p-4 shadow-sm lg:bg-transparent lg:p-0">
-              <div>
-                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  CMS navigation
-                </p>
-              </div>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-200 lg:hidden"
-              >
-                Close
-              </button>
-            </div>
-            <div className="space-y-2 p-4 lg:p-0">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`block rounded-xl px-4 py-3 text-sm font-medium transition ${
-                    location.pathname === link.to
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-            <div className="mt-6 hidden rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 lg:block">
-              <p className="font-semibold">Signed in as</p>
-              <p className="mt-1 truncate text-slate-600">
-                {currentUser?.username || currentUser?.email || "Unknown user"}
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row">
+        <aside className="w-full rounded-[2rem] border border-emerald-100 bg-white p-5 shadow-sm lg:w-80">
+          <div className="flex items-center justify-between gap-4 p-4 lg:block">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                Navigation
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Jump between sales, customers, and product workflows.
               </p>
             </div>
-            <div className="mt-4 hidden lg:block">
-              <button
-                onClick={signOut}
-                className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-700"
+            <button
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 lg:hidden"
+            >
+              Menu
+            </button>
+          </div>
+
+          <div
+            className={`${isSidebarOpen ? "block" : "hidden"} space-y-2 px-4 lg:block lg:px-0`}
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setIsSidebarOpen(false)}
+                className={`block rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                  location.pathname === link.to
+                    ? "bg-emerald-700 text-white"
+                    : "text-emerald-700 hover:bg-emerald-50"
+                }`}
               >
-                Logout
-              </button>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-8 rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700">
+            <p className="font-semibold">Signed in as</p>
+            <p className="mt-1 truncate text-sm">{currentUser?.email}</p>
+          </div>
+
+          <div className="mt-6 rounded-[1.75rem] border border-emerald-100 bg-slate-950/5 p-4 text-sm text-slate-700">
+            <p className="font-semibold text-emerald-700">Quick stats</p>
+            <div className="mt-3 space-y-3">
+              <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
+                <span className="text-xs text-slate-500">Customers</span>
+                <strong className="text-sm text-slate-900">1.2K</strong>
+              </div>
+              <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
+                <span className="text-xs text-slate-500">Sales</span>
+                <strong className="text-sm text-slate-900">289</strong>
+              </div>
             </div>
           </div>
         </aside>
 
-        <main className="flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:ml-72">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <main className="flex-1 rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-sm lg:p-8">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                Workspace
+              <p className="text-sm uppercase tracking-[0.2em] text-emerald-700">
+                Workspace overview
               </p>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                Content management
+              <h1 className="text-3xl font-semibold text-slate-900">
+                Empower your team with Hope CMS
               </h1>
             </div>
-            <div className="flex flex-col items-start gap-2 sm:items-end">
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
-                {currentUser?.user_type || "USER"}
-              </span>
-              <span className="text-sm text-slate-500">
-                {currentUser?.email}
-              </span>
+            <div className="space-y-2 rounded-3xl bg-emerald-50 p-4 text-sm text-slate-700 shadow-sm">
+              <p className="font-semibold text-emerald-700">Current plan</p>
+              <p>Team growth plan</p>
+              <p className="text-xs text-slate-500">Updated 2 hours ago</p>
             </div>
           </div>
-          <Outlet />
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Active customers</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">
+                1,241
+              </p>
+              <p className="mt-2 text-sm text-emerald-700">+14.3% this month</p>
+            </div>
+            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Monthly revenue</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">
+                $82.4K
+              </p>
+              <p className="mt-2 text-sm text-emerald-700">
+                +9.8% vs last period
+              </p>
+            </div>
+            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Open opportunities</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">24</p>
+              <p className="mt-2 text-sm text-emerald-700">3 new leads today</p>
+            </div>
+            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Support tickets</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-900">8</p>
+              <p className="mt-2 text-sm text-emerald-700">Resolve faster</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
