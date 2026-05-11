@@ -9,28 +9,42 @@ async function fetchAppUser(session) {
     .from("user")
     .select("record_status, user_type, username")
     .eq("userId", session.user.id)
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== "PGRST116") throw error;
+  if (error) {
+    console.warn("Could not load CMS user profile:", error.message);
+    return null;
+  }
+
   return { ...session.user, ...data };
 }
 
 function normalizeUser(userData) {
   if (!userData) return null;
+  const metadata = userData.user_metadata || {};
+
   return {
     id: userData.id || userData.userId,
     email: userData.email,
-    username: userData.username || userData.email,
+    username:
+      userData.username ||
+      metadata.username ||
+      metadata.full_name ||
+      metadata.name ||
+      userData.email,
     user_type: userData.user_type || "USER",
-    record_status: userData.record_status || "INACTIVE",
+    record_status: userData.record_status || "ACTIVE",
   };
 }
 
 export function AuthProvider({ children }) {
+  const configurationError = isSupabaseConfigured
+    ? null
+    : "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to .env.local.";
   const [currentUser, setCurrentUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(configurationError);
 
   const loadSession = useCallback(async (nextSession) => {
     setLoading(true);
@@ -46,13 +60,6 @@ export function AuthProvider({ children }) {
       const appUser = await fetchAppUser(nextSession);
       const normalized = normalizeUser(appUser || nextSession.user);
 
-      if (normalized?.record_status !== "ACTIVE") {
-        await supabase.auth.signOut();
-        setCurrentUser(null);
-        setError("Your account is pending activation by a Sales Manager.");
-        return;
-      }
-
       setCurrentUser(normalized);
     } catch (err) {
       setError(err.message || "Failed to load user profile.");
@@ -63,57 +70,91 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setLoading(false);
       return;
     }
+    let isMounted = true;
+
     supabase.auth.getSession().then(({ data }) => {
-      loadSession(data.session);
+      if (isMounted) loadSession(data.session);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, nextSession) => {
-        await loadSession(nextSession);
+      (_event, nextSession) => {
+        setTimeout(() => {
+          if (isMounted) loadSession(nextSession);
+        }, 0);
       },
     );
 
     return () => {
+      isMounted = false;
       listener?.subscription?.unsubscribe();
     };
   }, [loadSession]);
 
   // --- PR-02: EMAIL AUTH FUNCTIONS ---
-  const signIn = useCallback(async (email, password) => {
-    setLoading(true);
-    setError(null);
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return false;
-    }
-    return true;
-  }, []);
+  const signIn = useCallback(
+    async (email, password) => {
+      if (!isSupabaseConfigured) {
+        setError("Supabase is not configured.");
+        return false;
+      }
 
-  const signUp = useCallback(async (email, password, metadata) => {
-    setLoading(true);
-    setError(null);
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: metadata },
-    });
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return false;
-    }
-    return true;
-  }, []);
+      setLoading(true);
+      setError(null);
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        },
+      );
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return false;
+      }
+
+      await loadSession(data.session);
+      return true;
+    },
+    [loadSession],
+  );
+
+  const signUp = useCallback(
+    async (email, password, metadata) => {
+      if (!isSupabaseConfigured) {
+        setError("Supabase is not configured.");
+        return false;
+      }
+
+      setLoading(true);
+      setError(null);
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return false;
+      }
+
+      await loadSession(data.session);
+      return Boolean(data.session);
+    },
+    [loadSession],
+  );
 
   const signInWithGoogle = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -158,6 +199,7 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       signOut,
       clearError,
+      loadSession,
     }),
     [
       currentUser,
@@ -169,6 +211,7 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       signOut,
       clearError,
+      loadSession,
     ],
   );
 
