@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
@@ -8,14 +8,30 @@ export function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signUp, signInWithGoogle, error, loading, clearError } = useAuth();
+  const {
+    currentUser,
+    signUp,
+    signInWithGoogle,
+    error,
+    loading,
+    clearError,
+  } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/customers", { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   const handleRegister = async (event) => {
     event.preventDefault();
     clearError();
-    await signUp(email, password, { firstName, lastName, username });
-    navigate("/auth/callback");
+    const success = await signUp(email, password, { firstName, lastName, username });
+
+    if (success) {
+      navigate("/customers");
+    }
   };
 
   return (
