@@ -11,10 +11,7 @@ async function fetchAppUser(session) {
     .eq("userId", session.user.id)
     .single();
 
-  if (error && error.code !== "PGRST116") {
-    throw error;
-  }
-
+  if (error && error.code !== "PGRST116") throw error;
   return { ...session.user, ...data };
 }
 
@@ -25,7 +22,7 @@ function normalizeUser(userData) {
     email: userData.email,
     username: userData.username || userData.email,
     user_type: userData.user_type || "USER",
-    record_status: userData.record_status || "INACTIVE", // Default to INACTIVE for safety
+    record_status: userData.record_status || "INACTIVE",
   };
 }
 
@@ -41,7 +38,6 @@ export function AuthProvider({ children }) {
 
     try {
       setSession(nextSession);
-
       if (!nextSession) {
         setCurrentUser(null);
         return;
@@ -58,8 +54,8 @@ export function AuthProvider({ children }) {
       }
 
       setCurrentUser(normalized);
-    } catch (fetchError) {
-      setError(fetchError.message || "Failed to load user profile.");
+    } catch (err) {
+      setError(err.message || "Failed to load user profile.");
     } finally {
       setLoading(false);
     }
@@ -70,7 +66,6 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-
     supabase.auth.getSession().then(({ data }) => {
       loadSession(data.session);
     });
@@ -86,14 +81,70 @@ export function AuthProvider({ children }) {
     };
   }, [loadSession]);
 
+  // --- NEW FOR PR-02: EMAIL AUTH FUNCTIONS ---
+
+  // Requirement: signIn() wired to Login form
+  const signIn = useCallback(async (email, password) => {
+    setLoading(true);
+    setError(null);
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return false;
+    }
+    return true;
+  }, []);
+
+  // Requirement: signUp() wired to Register form
+  const signUp = useCallback(async (email, password, metadata) => {
+    setLoading(true);
+    setError(null);
+    const { error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata, // metadata is passed to the DB trigger
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return false;
+    }
+    return true;
+  }, []);
+
+  const signOut = useCallback(async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+    setSession(null);
+    setLoading(false);
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // Updated value to include the new functions
   const value = useMemo(
     () => ({
       currentUser,
       session,
       loading,
       error,
+      signIn,
+      signUp,
+      signOut,
+      clearError,
     }),
-    [currentUser, session, loading, error],
+    [currentUser, session, loading, error, signIn, signUp, signOut, clearError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
