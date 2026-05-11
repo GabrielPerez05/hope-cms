@@ -81,9 +81,7 @@ export function AuthProvider({ children }) {
     };
   }, [loadSession]);
 
-  // --- NEW FOR PR-02: EMAIL AUTH FUNCTIONS ---
-
-  // Requirement: signIn() wired to Login form
+  // --- PR-02: EMAIL AUTH FUNCTIONS ---
   const signIn = useCallback(async (email, password) => {
     setLoading(true);
     setError(null);
@@ -91,7 +89,6 @@ export function AuthProvider({ children }) {
       email,
       password,
     });
-
     if (authError) {
       setError(authError.message);
       setLoading(false);
@@ -100,24 +97,42 @@ export function AuthProvider({ children }) {
     return true;
   }, []);
 
-  // Requirement: signUp() wired to Register form
   const signUp = useCallback(async (email, password, metadata) => {
     setLoading(true);
     setError(null);
     const { error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: metadata, // metadata is passed to the DB trigger
-      },
+      options: { data: metadata },
     });
-
     if (authError) {
       setError(authError.message);
       setLoading(false);
       return false;
     }
     return true;
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        // Redirects back to your callback route
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+    }
   }, []);
 
   const signOut = useCallback(async () => {
@@ -132,7 +147,6 @@ export function AuthProvider({ children }) {
     setError(null);
   }, []);
 
-  // Updated value to include the new functions
   const value = useMemo(
     () => ({
       currentUser,
@@ -141,10 +155,21 @@ export function AuthProvider({ children }) {
       error,
       signIn,
       signUp,
+      signInWithGoogle,
       signOut,
       clearError,
     }),
-    [currentUser, session, loading, error, signIn, signUp, signOut, clearError],
+    [
+      currentUser,
+      session,
+      loading,
+      error,
+      signIn,
+      signUp,
+      signInWithGoogle,
+      signOut,
+      clearError,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
