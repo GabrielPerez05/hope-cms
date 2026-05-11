@@ -1,31 +1,65 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { useAuth } from "../hooks/useAuth";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export function AuthCallbackPage() {
   const [message, setMessage] = useState("Completing authentication...");
-  const [loading, setLoading] = useState(true);
+  const hasHandledCallback = useRef(false);
+  const { loadSession } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     async function handleCallback() {
-      const { error } = await supabase.auth.getSessionFromUrl({
-        storeSession: true,
-      });
+      if (hasHandledCallback.current) return;
+      hasHandledCallback.current = true;
 
-      if (error) {
-        setMessage(error.message);
-        setLoading(false);
-        navigate(`/login?error=${encodeURIComponent(error.message)}`);
+      if (!isSupabaseConfigured) {
+        const errorMessage = "Supabase is not configured.";
+        setMessage(errorMessage);
+        navigate(`/login?error=${encodeURIComponent(errorMessage)}`, {
+          replace: true,
+        });
         return;
       }
 
-      setLoading(false);
-      navigate("/customers");
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const urlError = params.get("error_description") || params.get("error");
+
+      if (urlError) {
+        setMessage(urlError);
+        navigate(`/login?error=${encodeURIComponent(urlError)}`, {
+          replace: true,
+        });
+        return;
+      }
+
+      let authResult;
+
+      if (code) {
+        authResult = await supabase.auth.exchangeCodeForSession(code);
+      } else {
+        authResult = await supabase.auth.getSession();
+      }
+
+      const session = authResult.data.session;
+      const authError = authResult.error;
+
+      if (authError) {
+        setMessage(authError.message);
+        navigate(`/login?error=${encodeURIComponent(authError.message)}`, {
+          replace: true,
+        });
+        return;
+      }
+
+      await loadSession(session);
+      navigate("/customers", { replace: true });
     }
 
     handleCallback();
-  }, [navigate]);
+  }, [loadSession, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-50 px-4 py-10">
