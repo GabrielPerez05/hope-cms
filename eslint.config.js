@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -26,32 +25,3 @@ export default defineConfig([
     },
   },
 ]);
-=======
-import js from "@eslint/js";
-import globals from "globals";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import { defineConfig, globalIgnores } from "eslint/config";
-
-export default defineConfig([
-  globalIgnores(["dist", "node_modules", ".vite"]),
-  {
-    files: ["**/*.{js,jsx}"],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-    ],
-    languageOptions: {
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-      globals: globals.browser,
-    },
-  },
-]);
->>>>>>> 535af6926ae60f228da74f82990a30ff8a584b19
