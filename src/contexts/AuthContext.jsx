@@ -60,6 +60,16 @@ export function AuthProvider({ children }) {
       const appUser = await fetchAppUser(nextSession);
       const normalized = normalizeUser(appUser || nextSession.user);
 
+      // LOGIN GUARD: Block INACTIVE accounts
+      if (normalized?.record_status !== "ACTIVE") {
+        await supabase.auth.signOut();
+        setCurrentUser(null);
+        setError(
+          "Your account is pending activation by a Sales Manager. Please contact your administrator.",
+        );
+        return;
+      }
+
       setCurrentUser(normalized);
     } catch (err) {
       setError(err.message || "Failed to load user profile.");
