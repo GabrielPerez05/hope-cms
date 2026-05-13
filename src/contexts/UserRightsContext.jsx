@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { RightsContext } from "./rights-context";
@@ -36,9 +36,6 @@ export function UserRightsProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Query all 9 user rights from the UserModule_Rights table
-   */
   const loadUserRights = useCallback(async () => {
     if (!currentUser?.id || !session) {
       setRights({
@@ -59,7 +56,6 @@ export function UserRightsProvider({ children }) {
     setError(null);
 
     try {
-      // Query all 9 rights for the current user
       const { data, error: queryError } = await supabase
         .from("user_rights")
         .select("right_name, user_right_status")
@@ -67,7 +63,6 @@ export function UserRightsProvider({ children }) {
 
       if (queryError) throw queryError;
 
-      // Build rights object from query results
       const rightsMap = {
         CUST_VIEW: 0,
         CUST_ADD: 0,
@@ -97,38 +92,24 @@ export function UserRightsProvider({ children }) {
     }
   }, [currentUser?.id, session]);
 
-  /**
-   * Load rights whenever user changes (on login/logout)
-   */
   useEffect(() => {
     loadUserRights();
   }, [loadUserRights]);
 
-  /**
-   * Helper: Check if user has a specific right
-   */
   const hasRight = useCallback(
-    (rightName) => {
-      return rights[rightName] === 1;
-    },
+    (rightName) => rights[rightName] === 1,
     [rights],
   );
 
-  /**
-   * Helper: Check if user can perform any action (CUST_ADD, CUST_EDIT, etc.)
-   */
-  const canEdit = useCallback(() => {
-    return (
-      rights.CUST_ADD === 1 || rights.CUST_EDIT === 1 || rights.CUST_DEL === 1
-    );
-  }, [rights]);
+  const canEdit = useCallback(
+    () => rights.CUST_ADD === 1 || rights.CUST_EDIT === 1 || rights.CUST_DEL === 1,
+    [rights],
+  );
 
-  /**
-   * Helper: Check if user is system admin
-   */
-  const isAdmin = useCallback(() => {
-    return rights.SYS_ADMIN === 1;
-  }, [rights]);
+  const isAdmin = useCallback(
+    () => rights.SYS_ADMIN === 1,
+    [rights],
+  );
 
   const value = useMemo(
     () => ({

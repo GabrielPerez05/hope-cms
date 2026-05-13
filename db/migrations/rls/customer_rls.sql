@@ -1,5 +1,9 @@
+-- Enable RLS on customer table
 ALTER TABLE customer ENABLE ROW LEVEL SECURITY;
 
+-- =========================
+-- SELECT Policies
+-- =========================
 -- USER role: can only see ACTIVE customers
 CREATE POLICY user_select_active
 ON customer
@@ -13,7 +17,10 @@ FOR SELECT
 TO admin, superadmin
 USING (true);
 
--- INSERT allowed if user has CUST_ADD right
+-- =========================
+-- INSERT Policy
+-- =========================
+-- Allow insert if user has CUST_ADD right
 CREATE POLICY user_insert_customer
 ON customer
 FOR INSERT
@@ -24,7 +31,10 @@ USING (EXISTS (
       AND value = 1
 ));
 
--- UPDATE edit allowed if user has CUST_EDIT right
+-- =========================
+-- UPDATE Policies
+-- =========================
+-- Allow edit if user has CUST_EDIT right
 CREATE POLICY user_update_customer
 ON customer
 FOR UPDATE
@@ -35,7 +45,7 @@ USING (EXISTS (
       AND value = 1
 ));
 
--- UPDATE deactivate allowed if user has CUST_DEL right
+-- Allow deactivate (set record_status = 'INACTIVE') if user has CUST_DEL right
 CREATE POLICY user_deactivate_customer
 ON customer
 FOR UPDATE
@@ -47,7 +57,7 @@ USING (EXISTS (
 ))
 WITH CHECK (record_status = 'INACTIVE');
 
--- UPDATE recover allowed for ADMIN/SUPERADMIN
+-- Allow recovery (set record_status = 'ACTIVE') only for ADMIN/SUPERADMIN
 CREATE POLICY admin_recover_customer
 ON customer
 FOR UPDATE

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+﻿import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -31,10 +31,7 @@ function App() {
               <Route path="sales" element={<SalesPage />} />
               <Route path="products" element={<ProductsPage />} />
               <Route path="admin" element={<AdminPage />} />
-              <Route
-                path="deleted-customers"
-                element={<DeletedCustomersPage />}
-              />
+              <Route path="deleted-customers" element={<DeletedCustomersPage />} />
             </Route>
           </Route>
 

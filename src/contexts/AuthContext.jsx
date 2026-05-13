@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { AuthContext } from "./auth-context";
 
@@ -171,7 +171,6 @@ export function AuthProvider({ children }) {
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // Redirects back to your callback route
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           access_type: "offline",
