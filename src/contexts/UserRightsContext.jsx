@@ -1,19 +1,130 @@
-import React, { createContext, useContext, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../lib/supabase";
+import { RightsContext } from "./rights-context";
 
-const UserRightsContext = createContext();
+/**
+ * UserRightsProvider - Manages user rights and permissions
+ *
+ * On login, queries all 9 UserModule_Rights rows and stores as:
+ * {
+ *   CUST_VIEW: 1,
+ *   CUST_ADD: 0,
+ *   CUST_EDIT: 1,
+ *   CUST_DEL: 0,
+ *   SALES_VIEW: 1,
+ *   SD_VIEW: 1,
+ *   PROD_VIEW: 1,
+ *   PRICE_VIEW: 1,
+ *   SYS_ADMIN: 0
+ * }
+ */
 
-export const UserRightsProvider = ({ children }) => {
-  const [userRights, setUserRights] = useState([]); // Array of 9 strings/IDs
-  const [userType, setUserType] = useState('USER'); // 'ADMIN' or 'USER'
+export function UserRightsProvider({ children }) {
+  const { currentUser, session } = useAuth();
+  const [rights, setRights] = useState({
+    CUST_VIEW: 0,
+    CUST_ADD: 0,
+    CUST_EDIT: 0,
+    CUST_DEL: 0,
+    SALES_VIEW: 0,
+    SD_VIEW: 0,
+    PROD_VIEW: 0,
+    PRICE_VIEW: 0,
+    SYS_ADMIN: 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const hasRight = (rightId) => userRights.includes(rightId);
+  const loadUserRights = useCallback(async () => {
+    if (!currentUser?.id || !session) {
+      setRights({
+        CUST_VIEW: 0,
+        CUST_ADD: 0,
+        CUST_EDIT: 0,
+        CUST_DEL: 0,
+        SALES_VIEW: 0,
+        SD_VIEW: 0,
+        PROD_VIEW: 0,
+        PRICE_VIEW: 0,
+        SYS_ADMIN: 0,
+      });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: queryError } = await supabase
+        .from("user_rights")
+        .select("right_name, user_right_status")
+        .eq("userId", currentUser.id);
+
+      if (queryError) throw queryError;
+
+      const rightsMap = {
+        CUST_VIEW: 0,
+        CUST_ADD: 0,
+        CUST_EDIT: 0,
+        CUST_DEL: 0,
+        SALES_VIEW: 0,
+        SD_VIEW: 0,
+        PROD_VIEW: 0,
+        PRICE_VIEW: 0,
+        SYS_ADMIN: 0,
+      };
+
+      if (data && Array.isArray(data)) {
+        data.forEach((row) => {
+          if (rightsMap.hasOwnProperty(row.right_name)) {
+            rightsMap[row.right_name] = row.user_right_status ? 1 : 0;
+          }
+        });
+      }
+
+      setRights(rightsMap);
+    } catch (err) {
+      setError(err.message || "Failed to load user rights.");
+      console.error("Error loading user rights:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?.id, session]);
+
+  useEffect(() => {
+    loadUserRights();
+  }, [loadUserRights]);
+
+  const hasRight = useCallback(
+    (rightName) => rights[rightName] === 1,
+    [rights],
+  );
+
+  const canEdit = useCallback(
+    () => rights.CUST_ADD === 1 || rights.CUST_EDIT === 1 || rights.CUST_DEL === 1,
+    [rights],
+  );
+
+  const isAdmin = useCallback(
+    () => rights.SYS_ADMIN === 1,
+    [rights],
+  );
+
+  const value = useMemo(
+    () => ({
+      rights,
+      loading,
+      error,
+      hasRight,
+      canEdit,
+      isAdmin,
+      loadUserRights,
+    }),
+    [rights, loading, error, hasRight, canEdit, isAdmin, loadUserRights],
+  );
 
   return (
-    <UserRightsContext.Provider value={{ userRights, userType, setUserRights, hasRight }}>
-      {children}
-    </UserRightsContext.Provider>
+    <RightsContext.Provider value={value}>{children}</RightsContext.Provider>
   );
-};
-
-// Custom hook for easy access
-export const useRights = () => useContext(UserRightsContext);
+}
