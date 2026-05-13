@@ -16,7 +16,7 @@ import { RightsContext } from "./rights-context";
  *   SD_VIEW: 1,
  *   PROD_VIEW: 1,
  *   PRICE_VIEW: 1,
- *   SYS_ADMIN: 0
+ *   ADM_USER: 0
  * }
  */
 
@@ -31,7 +31,7 @@ export function UserRightsProvider({ children }) {
     SD_VIEW: 0,
     PROD_VIEW: 0,
     PRICE_VIEW: 0,
-    SYS_ADMIN: 0,
+    ADM_USER: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -47,7 +47,7 @@ export function UserRightsProvider({ children }) {
         SD_VIEW: 0,
         PROD_VIEW: 0,
         PRICE_VIEW: 0,
-        SYS_ADMIN: 0,
+        ADM_USER: 0,
       });
       return;
     }
@@ -72,7 +72,7 @@ export function UserRightsProvider({ children }) {
         SD_VIEW: 0,
         PROD_VIEW: 0,
         PRICE_VIEW: 0,
-        SYS_ADMIN: 0,
+        ADM_USER: 0,
       };
 
       if (data && Array.isArray(data)) {
@@ -106,10 +106,9 @@ export function UserRightsProvider({ children }) {
     [rights],
   );
 
-  const isAdmin = useCallback(
-    () => rights.SYS_ADMIN === 1,
-    [rights],
-  );
+  const isAdmin = useCallback(() => {
+    return rights.ADM_USER === 1;
+  }, [rights]);
 
   const value = useMemo(
     () => ({
