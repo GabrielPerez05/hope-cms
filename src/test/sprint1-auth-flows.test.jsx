@@ -168,6 +168,41 @@ describe("Sprint 1 authentication", () => {
 
     expect(await screen.findByRole("button", { name: "active.user" })).toBeInTheDocument();
   });
+
+  it("blocks inactive email login sessions and signs the user out", async () => {
+    mockUserProfile({
+      userId: "inactive-user",
+      username: "inactive.user",
+      user_type: "USER",
+      record_status: "INACTIVE",
+    });
+    mocks.signInWithPassword.mockResolvedValue({
+      data: {
+        session: { user: { id: "inactive-user", email: "inactive@test.com" } },
+      },
+      error: null,
+    });
+
+    function LoginProbe() {
+      const { currentUser, error, signIn } = useAuth();
+      return (
+        <div>
+          <button onClick={() => signIn("inactive@test.com", "password123")}>
+            {currentUser?.username || "login"}
+          </button>
+          <span>{error}</span>
+        </div>
+      );
+    }
+
+    const user = userEvent.setup();
+    renderWithAuth(<LoginProbe />);
+    await user.click(await screen.findByRole("button", { name: "login" }));
+
+    expect(await screen.findByText(/pending activation/i)).toBeInTheDocument();
+    expect(mocks.signOut).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "login" })).toBeInTheDocument();
+  });
 });
 
 describe("Sprint 1 callback and route protection", () => {
@@ -189,6 +224,34 @@ describe("Sprint 1 callback and route protection", () => {
     await waitFor(() => {
       expect(mocks.exchangeCodeForSession).toHaveBeenCalledWith("abc123");
       expect(mocks.navigate).toHaveBeenCalledWith("/customers", { replace: true });
+    });
+  });
+
+  it("redirects inactive OAuth callback sessions to login with an error", async () => {
+    mockUserProfile({
+      userId: "inactive-oauth-user",
+      username: "inactive.oauth",
+      user_type: "USER",
+      record_status: "INACTIVE",
+    });
+    mocks.exchangeCodeForSession.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: "inactive-oauth-user", email: "inactive-oauth@test.com" },
+        },
+      },
+      error: null,
+    });
+    window.history.pushState({}, "", "/auth/callback?code=inactive123");
+
+    renderWithAuth(<AuthCallbackPage />);
+
+    await waitFor(() => {
+      expect(mocks.signOut).toHaveBeenCalled();
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.stringContaining("/login?error="),
+        { replace: true },
+      );
     });
   });
 
