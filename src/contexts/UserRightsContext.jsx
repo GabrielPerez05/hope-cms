@@ -59,7 +59,7 @@ export function UserRightsProvider({ children }) {
     try {
       const { data, error: queryError } = await supabase
         .from("user_rights")
-        .select("right_name, user_right_status")
+        .select("right_name, right_value")
         .eq("userId", currentUserId);
 
       if (queryError) throw queryError;
@@ -79,7 +79,7 @@ export function UserRightsProvider({ children }) {
       if (data && Array.isArray(data)) {
         data.forEach((row) => {
           if (Object.prototype.hasOwnProperty.call(rightsMap, row.right_name)) {
-            rightsMap[row.right_name] = row.user_right_status ? 1 : 0;
+            rightsMap[row.right_name] = row.right_value ? 1 : 0;
           }
         });
       }

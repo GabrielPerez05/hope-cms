@@ -153,6 +153,11 @@ export function AuthProvider({ children }) {
         return false;
       }
 
+      if (data.user && !data.session) {
+        setLoading(false);
+        return "verification_required";
+      }
+
       await loadSession(data.session);
       return Boolean(data.session);
     },
