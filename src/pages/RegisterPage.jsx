@@ -9,6 +9,7 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
   const { signUp, signInWithGoogle, error, loading, clearError } = useAuth();
   const navigate = useNavigate();
 
@@ -41,10 +42,42 @@ export function RegisterPage() {
       lastName,
       username,
     });
+    if (success === "verification_required") {
+      setVerificationEmail(email);
+      return;
+    }
+
     if (!success) return;
 
     navigate("/auth/callback");
   };
+
+  if (verificationEmail) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07120f] px-4 py-8 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.28),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.18),transparent_28%),linear-gradient(135deg,#07120f_0%,#0f172a_52%,#022c22_100%)]" />
+        <div className="relative w-full max-w-lg rounded-[2rem] border border-white/10 bg-white p-8 text-center text-slate-900 shadow-2xl shadow-black/30">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-bold text-white">
+            H
+          </span>
+          <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+            Check your email
+          </h1>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            We sent a verification link to {verificationEmail}. Confirm your
+            email, then return to Hope CMS to log in.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="mt-8 w-full rounded-2xl bg-emerald-700 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-emerald-800"
+          >
+            Back to login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#07120f] px-4 py-8 text-white sm:px-6 lg:px-8">

@@ -38,7 +38,9 @@ WHERE NOT EXISTS (
 );
 
 -- Verify SUPERADMIN exists and has all 9 rights
-SELECT ur.user_email, COUNT(*) AS rights_assigned
-FROM user_module_rights ur
-WHERE ur.user_email = 'jcesperanza@neu.edu.ph'
-GROUP BY ur.user_email;
+SELECT u.email, COUNT(*) AS rights_assigned
+FROM public."user" u
+JOIN public.user_rights ur ON ur."userId" = u."userId"
+WHERE lower(u.email) = 'jcesperanza@neu.edu.ph'
+  AND ur.right_value = 1
+GROUP BY u.email;
