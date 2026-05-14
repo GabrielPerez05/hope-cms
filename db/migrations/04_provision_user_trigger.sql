@@ -19,7 +19,7 @@ BEGIN
     VALUES 
         (NEW.id, 'CUST_VIEW', 1), (NEW.id, 'CUST_ADD', 0), (NEW.id, 'CUST_EDIT', 0),
         (NEW.id, 'SALES_VIEW', 1), (NEW.id, 'PRICE_VIEW', 1), (NEW.id, 'PROD_VIEW', 1),
-        (NEW.id, 'SD_VIEW', 1), (NEW.id, 'REC_DEL', 0), (NEW.id, 'SYS_ADMIN', 0);
+        (NEW.id, 'SD_VIEW', 1), (NEW.id, 'REC_DEL', 0), (NEW.id, 'ADM_USER', 0);
 
     RETURN NEW;
 END;

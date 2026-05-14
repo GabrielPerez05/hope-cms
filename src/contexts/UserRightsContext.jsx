@@ -16,12 +16,13 @@ import { RightsContext } from "./rights-context";
  *   SD_VIEW: 1,
  *   PROD_VIEW: 1,
  *   PRICE_VIEW: 1,
- *   SYS_ADMIN: 0
+ *   ADM_USER: 0
  * }
  */
 
 export function UserRightsProvider({ children }) {
   const { currentUser, session } = useAuth();
+  const currentUserId = currentUser?.id ?? null;
   const [rights, setRights] = useState({
     CUST_VIEW: 0,
     CUST_ADD: 0,
@@ -31,13 +32,13 @@ export function UserRightsProvider({ children }) {
     SD_VIEW: 0,
     PROD_VIEW: 0,
     PRICE_VIEW: 0,
-    SYS_ADMIN: 0,
+    ADM_USER: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadUserRights = useCallback(async () => {
-    if (!currentUser?.id || !session) {
+    if (!currentUserId || !session) {
       setRights({
         CUST_VIEW: 0,
         CUST_ADD: 0,
@@ -47,7 +48,7 @@ export function UserRightsProvider({ children }) {
         SD_VIEW: 0,
         PROD_VIEW: 0,
         PRICE_VIEW: 0,
-        SYS_ADMIN: 0,
+        ADM_USER: 0,
       });
       return;
     }
@@ -59,7 +60,7 @@ export function UserRightsProvider({ children }) {
       const { data, error: queryError } = await supabase
         .from("user_rights")
         .select("right_name, user_right_status")
-        .eq("userId", currentUser.id);
+        .eq("userId", currentUserId);
 
       if (queryError) throw queryError;
 
@@ -72,12 +73,12 @@ export function UserRightsProvider({ children }) {
         SD_VIEW: 0,
         PROD_VIEW: 0,
         PRICE_VIEW: 0,
-        SYS_ADMIN: 0,
+        ADM_USER: 0,
       };
 
       if (data && Array.isArray(data)) {
         data.forEach((row) => {
-          if (rightsMap.hasOwnProperty(row.right_name)) {
+          if (Object.prototype.hasOwnProperty.call(rightsMap, row.right_name)) {
             rightsMap[row.right_name] = row.user_right_status ? 1 : 0;
           }
         });
@@ -90,10 +91,11 @@ export function UserRightsProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [currentUser?.id, session]);
+  }, [currentUserId, session]);
 
   useEffect(() => {
-    loadUserRights();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadUserRights();
   }, [loadUserRights]);
 
   const hasRight = useCallback(
@@ -106,10 +108,9 @@ export function UserRightsProvider({ children }) {
     [rights],
   );
 
-  const isAdmin = useCallback(
-    () => rights.SYS_ADMIN === 1,
-    [rights],
-  );
+  const isAdmin = useCallback(() => {
+    return rights.ADM_USER === 1;
+  }, [rights]);
 
   const value = useMemo(
     () => ({
