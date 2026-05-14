@@ -175,6 +175,13 @@ Pull requests:
 - Use `src/lib/supabase.js` to initialize the client
 - Google OAuth and email/password auth are wired through `AuthContext`
 
+## Database implementation notes
+
+- The running app uses `public."user"`, `public.user_module`, and `public.user_rights` for profile, module, and rights data.
+- Rights columns are `"userId"`, `right_name`, and `right_value`.
+- RLS scripts use Supabase `auth.uid()` and the app's actual rights tables.
+- `initial_schema.sql` still includes support/source-data tables used by the seed relationships and verification checks: `employee`, `department`, `job`, `jobHistory`, and `payment`.
+
 ## Sprint deliverables
 
 - `db/migrations/initial_schema.sql`

@@ -6,7 +6,7 @@ import { RightsContext } from "./rights-context";
 /**
  * UserRightsProvider - Manages user rights and permissions
  *
- * On login, queries all 9 UserModule_Rights rows and stores as:
+ * On login, queries all 9 user_rights rows and stores as:
  * {
  *   CUST_VIEW: 1,
  *   CUST_ADD: 0,
