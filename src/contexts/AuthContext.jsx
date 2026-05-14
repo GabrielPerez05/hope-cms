@@ -2,6 +2,9 @@
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { AuthContext } from "./auth-context";
 
+const inactiveAccountMessage =
+  "Your account is pending activation by a Sales Manager. Please contact your administrator.";
+
 async function fetchAppUser(session) {
   if (!session) return null;
 
@@ -54,7 +57,7 @@ export function AuthProvider({ children }) {
       setSession(nextSession);
       if (!nextSession) {
         setCurrentUser(null);
-        return;
+        return { ok: false };
       }
 
       const appUser = await fetchAppUser(nextSession);
@@ -64,15 +67,16 @@ export function AuthProvider({ children }) {
       if (normalized?.record_status !== "ACTIVE") {
         await supabase.auth.signOut();
         setCurrentUser(null);
-        setError(
-          "Your account is pending activation by a Sales Manager. Please contact your administrator.",
-        );
-        return;
+        setError(inactiveAccountMessage);
+        return { ok: false, error: inactiveAccountMessage };
       }
 
       setCurrentUser(normalized);
+      return { ok: true, user: normalized };
     } catch (err) {
-      setError(err.message || "Failed to load user profile.");
+      const message = err.message || "Failed to load user profile.";
+      setError(message);
+      return { ok: false, error: message };
     } finally {
       setLoading(false);
     }
@@ -124,8 +128,8 @@ export function AuthProvider({ children }) {
         return false;
       }
 
-      await loadSession(data.session);
-      return true;
+      const sessionResult = await loadSession(data.session);
+      return Boolean(sessionResult?.ok);
     },
     [loadSession],
   );
@@ -158,8 +162,8 @@ export function AuthProvider({ children }) {
         return "verification_required";
       }
 
-      await loadSession(data.session);
-      return Boolean(data.session);
+      const sessionResult = await loadSession(data.session);
+      return Boolean(sessionResult?.ok);
     },
     [loadSession],
   );
