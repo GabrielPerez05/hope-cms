@@ -18,9 +18,12 @@ export function LoginPage() {
   }, [currentUser, navigate]);
 
   const validateLogin = () => {
-    if (!email.trim()) return "Please enter your email address.";
+    if (!email.trim() && !password) {
+      return "Email is required. Password is required.";
+    }
+    if (!email.trim()) return "Email is required.";
     if (!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email address.";
-    if (!password) return "Please enter your password.";
+    if (!password) return "Password is required.";
     if (password.length < 8) return "Password must be at least 8 characters.";
     return "";
   };
@@ -171,7 +174,6 @@ export function LoginPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
-                  required
                   placeholder="you@example.com"
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                 />
@@ -184,7 +186,6 @@ export function LoginPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   type="password"
-                  required
                   placeholder="Enter your password"
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                 />
