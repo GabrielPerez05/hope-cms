@@ -8,21 +8,23 @@ export function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [formError, setFormError] = useState("");
-  const [verificationEmail, setVerificationEmail] = useState("");
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const { signUp, signInWithGoogle, error, loading, clearError } = useAuth();
   const navigate = useNavigate();
 
   const validateRegister = () => {
-    if (!firstName.trim()) return "Please enter your first name.";
-    if (!lastName.trim()) return "Please enter your last name.";
-    if (!username.trim()) return "Please choose a username.";
+    if (!firstName.trim()) return "First name is required.";
+    if (!lastName.trim()) return "Last name is required.";
+    if (!username.trim()) return "Username is required.";
     if (username.trim().length < 3)
       return "Username must be at least 3 characters.";
-    if (!email.trim()) return "Please enter your email address.";
+    if (!email.trim()) return "Email is required.";
     if (!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email address.";
-    if (!password) return "Please enter a password.";
+    if (!password) return "Password is required.";
     if (password.length < 8) return "Password must be at least 8 characters.";
+    if (password !== confirmPassword) return "Passwords do not match.";
     return "";
   };
 
@@ -42,38 +44,22 @@ export function RegisterPage() {
       lastName,
       username,
     });
-    if (success === "verification_required") {
-      setVerificationEmail(email);
-      return;
-    }
-
     if (!success) return;
 
+    setRegistrationComplete(true);
     navigate("/auth/callback");
   };
 
-  if (verificationEmail) {
+  if (registrationComplete) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07120f] px-4 py-8 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.28),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.18),transparent_28%),linear-gradient(135deg,#07120f_0%,#0f172a_52%,#022c22_100%)]" />
-        <div className="relative w-full max-w-lg rounded-[2rem] border border-white/10 bg-white p-8 text-center text-slate-900 shadow-2xl shadow-black/30">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-bold text-white">
-            H
-          </span>
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+      <div className="flex min-h-screen items-center justify-center bg-emerald-50 px-4">
+        <div className="max-w-md rounded-[2rem] border border-emerald-100 bg-white p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-semibold text-slate-900">
             Check your email
           </h1>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
-            We sent a verification link to {verificationEmail}. Confirm your
-            email, then return to Hope CMS to log in.
+          <p className="mt-3 text-sm text-slate-600">
+            Confirm your account to finish setting up Hope CMS access.
           </p>
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="mt-8 w-full rounded-2xl bg-emerald-700 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-emerald-800"
-          >
-            Back to login
-          </button>
         </div>
       </div>
     );
@@ -223,7 +209,6 @@ export function RegisterPage() {
                   <input
                     value={firstName}
                     onChange={(event) => setFirstName(event.target.value)}
-                    required
                     placeholder="John"
                     className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                   />
@@ -235,7 +220,6 @@ export function RegisterPage() {
                   <input
                     value={lastName}
                     onChange={(event) => setLastName(event.target.value)}
-                    required
                     placeholder="Francisco"
                     className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                   />
@@ -249,7 +233,6 @@ export function RegisterPage() {
                 <input
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  required
                   placeholder="Choose a username"
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                 />
@@ -263,7 +246,6 @@ export function RegisterPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
-                  required
                   placeholder="you@example.com"
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                 />
@@ -277,13 +259,25 @@ export function RegisterPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   type="password"
-                  required
                   placeholder="Enter your password"
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                 />
                 <span className="mt-2 block text-xs font-medium text-slate-500">
                   Must be at least 8 characters.
                 </span>
+              </label>
+
+              <label className="block text-sm text-slate-700">
+                <span className="mb-2 block font-semibold text-slate-700">
+                  Confirm password
+                </span>
+                <input
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  type="password"
+                  placeholder="Confirm your password"
+                  className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                />
               </label>
 
               <button
