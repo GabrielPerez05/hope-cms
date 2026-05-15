@@ -54,18 +54,7 @@ export function AuthCallbackPage() {
         return;
       }
 
-      const sessionResult = await loadSession(session);
-
-      if (!sessionResult?.ok) {
-        const guardError =
-          sessionResult?.error || "Could not complete authentication.";
-        setMessage(guardError);
-        navigate(`/login?error=${encodeURIComponent(guardError)}`, {
-          replace: true,
-        });
-        return;
-      }
-
+      await loadSession(session);
       navigate("/customers", { replace: true });
     }
 
