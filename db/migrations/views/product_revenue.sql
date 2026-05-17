@@ -2,17 +2,26 @@
 -- Shows total revenue per product using latest price
 
 CREATE OR REPLACE VIEW product_revenue AS
-SELECT p.productid,
-       p.productname,
-       SUM(sd.quantity * ph.price) AS total_revenue
+WITH current_price AS (
+    SELECT
+        ph.prodcode,
+        ph.unitprice
+    FROM priceHist ph
+    WHERE ph.effdate = (
+        SELECT MAX(ph2.effdate)
+        FROM priceHist ph2
+        WHERE ph2.prodcode = ph.prodcode
+    )
+)
+SELECT
+       p.prodcode,
+       p.description,
+       p.unit,
+       COALESCE(SUM(sd.quantity), 0) AS total_quantity,
+       COALESCE(SUM(sd.quantity * cp.unitprice), 0) AS total_revenue
 FROM product p
-JOIN salesDetail sd
-  ON p.productid = sd.productid
-JOIN priceHist ph
-  ON p.productid = ph.productid
- AND ph.effective_date = (
-     SELECT MAX(ph2.effective_date)
-     FROM priceHist ph2
-     WHERE ph2.productid = p.productid
- )
-GROUP BY p.productid, p.productname;
+LEFT JOIN salesDetail sd
+  ON p.prodcode = sd.prodcode
+LEFT JOIN current_price cp
+  ON p.prodcode = cp.prodcode
+GROUP BY p.prodcode, p.description, p.unit;
