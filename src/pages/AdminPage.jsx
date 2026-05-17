@@ -5,11 +5,13 @@ import {
   DataLoadingState,
 } from "../components/DataStates";
 import {
-  PAGE_SIZE,
   Pagination,
+} from "../components/Pagination";
+import {
+  PAGE_SIZE,
   clampPage,
   getPageItems,
-} from "../components/Pagination";
+} from "../lib/pagination";
 import {
   MODULES,
   RIGHTS,
@@ -50,6 +52,7 @@ function AdminContent() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUsers();
   }, []);
 
@@ -70,10 +73,6 @@ function AdminContent() {
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
   const currentPage = clampPage(page, totalPages);
   const pagedUsers = getPageItems(users, currentPage);
-
-  useEffect(() => {
-    setPage((current) => clampPage(current, totalPages));
-  }, [totalPages]);
 
   async function saveUser(userId, updates) {
     setSaving(userId);

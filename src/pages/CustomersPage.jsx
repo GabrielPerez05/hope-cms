@@ -6,11 +6,13 @@ import {
   DataLoadingState,
 } from "../components/DataStates";
 import {
-  PAGE_SIZE,
   Pagination,
+} from "../components/Pagination";
+import {
+  PAGE_SIZE,
   clampPage,
   getPageItems,
-} from "../components/Pagination";
+} from "../lib/pagination";
 import { useAuth } from "../hooks/useAuth";
 import { useRights } from "../contexts/user-rights-context";
 import {
@@ -192,6 +194,7 @@ function CustomersContent() {
   const canAdd = hasRight("CUST_ADD");
   const canEdit = hasRight("CUST_EDIT");
   const canSoftDelete = userType === "SUPERADMIN" && hasRight("CUST_DEL");
+  const showActionsColumn = canEdit || canSoftDelete;
   const showStamp = userType === "ADMIN" || userType === "SUPERADMIN";
 
   useEffect(() => {
@@ -232,14 +235,6 @@ function CustomersContent() {
   const totalPages = Math.ceil(filteredCustomers.length / PAGE_SIZE);
   const currentPage = clampPage(page, totalPages);
   const pagedCustomers = getPageItems(filteredCustomers, currentPage);
-
-  useEffect(() => {
-    setPage(1);
-  }, [payTerm, query]);
-
-  useEffect(() => {
-    setPage((current) => clampPage(current, totalPages));
-  }, [totalPages]);
 
   async function handleAddCustomer(payload) {
     const created = await addCustomer(payload);
@@ -301,13 +296,19 @@ function CustomersContent() {
         <div className="mt-6 grid gap-3 md:grid-cols-[1fr_180px]">
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
             placeholder="Search by name or pay term"
             className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           />
           <select
             value={payTerm}
-            onChange={(event) => setPayTerm(event.target.value)}
+            onChange={(event) => {
+              setPayTerm(event.target.value);
+              setPage(1);
+            }}
             className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           >
             <option value="ALL">All pay terms</option>
@@ -331,7 +332,9 @@ function CustomersContent() {
                 <th className="px-4 py-3">Pay Term</th>
                 <th className="px-4 py-3">Status</th>
                 {showStamp ? <th className="px-4 py-3">Stamp</th> : null}
-                <th className="px-4 py-3">Actions</th>
+                {showActionsColumn ? (
+                  <th className="px-4 py-3">Actions</th>
+                ) : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 border-t border-slate-100">
@@ -362,30 +365,32 @@ function CustomersContent() {
                       {getStamp(customer)}
                     </td>
                   ) : null}
-                  <td className="px-4 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {canEdit ? (
-                        <button
-                          type="button"
-                          onClick={() => setModal({ type: "edit", customer })}
-                          className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
-                        >
-                          Edit
-                        </button>
-                      ) : null}
-                      {canSoftDelete && getStatus(customer) === "ACTIVE" ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setModal({ type: "delete", customer })
-                          }
-                          className="rounded-2xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"
-                        >
-                          Delete
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
+                  {showActionsColumn ? (
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {canEdit ? (
+                          <button
+                            type="button"
+                            onClick={() => setModal({ type: "edit", customer })}
+                            className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
+                          >
+                            Edit
+                          </button>
+                        ) : null}
+                        {canSoftDelete && getStatus(customer) === "ACTIVE" ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModal({ type: "delete", customer })
+                            }
+                            className="rounded-2xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

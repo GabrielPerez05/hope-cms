@@ -1,19 +1,8 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { RIGHT_NAMES } from "../lib/rights";
 import { supabase } from "../lib/supabase";
 import { RightsContext } from "./rights-context";
-
-export const RIGHT_NAMES = [
-  "CUST_VIEW",
-  "CUST_ADD",
-  "CUST_EDIT",
-  "CUST_DEL",
-  "SALES_VIEW",
-  "SD_VIEW",
-  "PROD_VIEW",
-  "PRICE_VIEW",
-  "ADM_USER",
-];
 
 function createDefaultRights() {
   return RIGHT_NAMES.reduce((map, rightName) => {

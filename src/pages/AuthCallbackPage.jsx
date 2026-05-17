@@ -54,7 +54,17 @@ export function AuthCallbackPage() {
         return;
       }
 
-      await loadSession(session);
+      const sessionResult = await loadSession(session);
+      if (!sessionResult?.ok) {
+        const errorMessage =
+          sessionResult?.error || "Your account could not be activated.";
+        setMessage(errorMessage);
+        navigate(`/login?error=${encodeURIComponent(errorMessage)}`, {
+          replace: true,
+        });
+        return;
+      }
+
       navigate("/customers", { replace: true });
     }
 

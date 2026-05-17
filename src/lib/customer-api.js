@@ -75,3 +75,20 @@ export async function softDeleteCustomer(custNo) {
   if (error) throw error;
   return data;
 }
+
+export async function recoverCustomer(custNo) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("customer")
+    .update({
+      record_status: "ACTIVE",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("custno", custNo)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

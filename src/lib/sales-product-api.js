@@ -76,7 +76,7 @@ export async function getSalesByCustomer(custNo) {
     .from("sales")
     .select("*")
     .eq("custno", custNo)
-    .order("saledate", { ascending: false });
+    .order("salesdate", { ascending: false });
 
   if (error) throw error;
   return data || [];

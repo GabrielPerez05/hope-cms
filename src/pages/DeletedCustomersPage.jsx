@@ -5,12 +5,15 @@ import {
   DataLoadingState,
 } from "../components/DataStates";
 import {
-  PAGE_SIZE,
   Pagination,
+} from "../components/Pagination";
+import {
+  PAGE_SIZE,
   clampPage,
   getPageItems,
-} from "../components/Pagination";
-import { getCustomers } from "../lib/customer-api";
+} from "../lib/pagination";
+import { useRights } from "../contexts/user-rights-context";
+import { getCustomers, recoverCustomer } from "../lib/customer-api";
 
 function getStamp(customer) {
   return (
@@ -31,10 +34,12 @@ export function DeletedCustomersPage() {
 }
 
 function DeletedCustomersContent() {
+  const { userType } = useRights();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const canRecover = userType === "ADMIN" || userType === "SUPERADMIN";
 
   useEffect(() => {
     let isMounted = true;
@@ -69,6 +74,16 @@ function DeletedCustomersContent() {
   const currentPage = clampPage(page, totalPages);
   const pagedCustomers = getPageItems(customers, currentPage);
 
+  async function handleRecover(custNo) {
+    setError(null);
+    try {
+      await recoverCustomer(custNo);
+      setCustomers((items) => items.filter((customer) => customer.custno !== custNo));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <section className="space-y-8">
       <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
@@ -93,6 +108,7 @@ function DeletedCustomersContent() {
                   <th className="px-4 py-3">Address</th>
                   <th className="px-4 py-3">Pay Term</th>
                   <th className="px-4 py-3">Updated</th>
+                  {canRecover ? <th className="px-4 py-3">Actions</th> : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 border-t border-slate-100">
@@ -113,6 +129,17 @@ function DeletedCustomersContent() {
                     <td className="px-4 py-4 text-slate-600">
                       {getStamp(customer)}
                     </td>
+                    {canRecover ? (
+                      <td className="px-4 py-4">
+                        <button
+                          type="button"
+                          onClick={() => handleRecover(customer.custno)}
+                          className="rounded-2xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700"
+                        >
+                          Recover
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>

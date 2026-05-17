@@ -5,11 +5,13 @@ import {
   DataLoadingState,
 } from "../components/DataStates";
 import {
-  PAGE_SIZE,
   Pagination,
+} from "../components/Pagination";
+import {
+  PAGE_SIZE,
   clampPage,
   getPageItems,
-} from "../components/Pagination";
+} from "../lib/pagination";
 import { getCurrentPrice, getProducts } from "../lib/sales-product-api";
 
 function getProdCode(product) {
