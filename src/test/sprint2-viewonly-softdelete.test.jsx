@@ -86,6 +86,7 @@ import { CustomerDetailPage } from "../pages/CustomerDetailPage";
 import { DeletedCustomersPage } from "../pages/DeletedCustomersPage";
 import { ProductsPage } from "../pages/ProductsPage";
 import { SalesPage } from "../pages/SalesPage";
+import { AdminOnlyRoute } from "../App";
 import { recoverCustomer } from "../lib/customer-api";
 
 function setRights({ userType = "USER" } = {}) {
@@ -168,6 +169,32 @@ describe("Sprint 2 M5 view-only enforcement gate", () => {
 });
 
 describe("Sprint 2 M5 deleted customer recovery", () => {
+  it("redirects USER away from the Deleted Customers route", async () => {
+    setRights({ userType: "USER" });
+    render(
+      <MemoryRouter initialEntries={["/deleted-customers"]}>
+        <Routes>
+          <Route
+            path="/deleted-customers"
+            element={
+              <AdminOnlyRoute>
+                <DeletedCustomersPage />
+              </AdminOnlyRoute>
+            }
+          />
+          <Route path="/customers" element={<CustomersRouteProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /customers/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /deleted customers/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("allows ADMIN to recover a soft-deleted customer", async () => {
     setRights({ userType: "ADMIN" });
     const user = userEvent.setup();
@@ -180,3 +207,7 @@ describe("Sprint 2 M5 deleted customer recovery", () => {
     expect(screen.queryByText("RF Industries")).not.toBeInTheDocument();
   });
 });
+
+function CustomersRouteProbe() {
+  return <h1>Customers</h1>;
+}

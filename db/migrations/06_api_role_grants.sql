@@ -14,7 +14,7 @@ GRANT SELECT ON TABLE public."user" TO authenticated;
 GRANT SELECT ON TABLE public.user_module TO authenticated;
 GRANT SELECT ON TABLE public.user_rights TO authenticated;
 GRANT UPDATE ON TABLE public."user" TO authenticated;
-GRANT INSERT, UPDATE, DELETE ON TABLE public.user_module TO authenticated;
-GRANT INSERT, UPDATE, DELETE ON TABLE public.user_rights TO authenticated;
+GRANT INSERT, UPDATE ON TABLE public.user_module TO authenticated;
+GRANT INSERT, UPDATE ON TABLE public.user_rights TO authenticated;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;

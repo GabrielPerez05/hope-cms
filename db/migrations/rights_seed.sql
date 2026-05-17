@@ -1,6 +1,6 @@
 -- Sprint 1 app auth/profile/rights tables used by the React app.
 CREATE TABLE IF NOT EXISTS public."user" (
-    "userId" UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    "userId" UUID PRIMARY KEY REFERENCES auth.users(id),
     email TEXT UNIQUE,
     username TEXT,
     user_type TEXT NOT NULL DEFAULT 'USER'
@@ -12,14 +12,14 @@ CREATE TABLE IF NOT EXISTS public."user" (
 
 CREATE TABLE IF NOT EXISTS public.user_module (
     id BIGSERIAL PRIMARY KEY,
-    "userId" UUID NOT NULL REFERENCES public."user"("userId") ON DELETE CASCADE,
+    "userId" UUID NOT NULL REFERENCES public."user"("userId"),
     module_name TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT FALSE,
     UNIQUE ("userId", module_name)
 );
 
 CREATE TABLE IF NOT EXISTS public.user_rights (
-    "userId" UUID NOT NULL REFERENCES public."user"("userId") ON DELETE CASCADE,
+    "userId" UUID NOT NULL REFERENCES public."user"("userId"),
     right_name TEXT NOT NULL,
     right_value INTEGER NOT NULL DEFAULT 0 CHECK (right_value IN (0, 1)),
     PRIMARY KEY ("userId", right_name)
