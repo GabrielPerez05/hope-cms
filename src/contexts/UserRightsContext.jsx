@@ -3,6 +3,25 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { RightsContext } from "./rights-context";
 
+export const RIGHT_NAMES = [
+  "CUST_VIEW",
+  "CUST_ADD",
+  "CUST_EDIT",
+  "CUST_DEL",
+  "SALES_VIEW",
+  "SD_VIEW",
+  "PROD_VIEW",
+  "PRICE_VIEW",
+  "ADM_USER",
+];
+
+function createDefaultRights() {
+  return RIGHT_NAMES.reduce((map, rightName) => {
+    map[rightName] = 0;
+    return map;
+  }, {});
+}
+
 /**
  * UserRightsProvider - Manages user rights and permissions
  *
@@ -23,33 +42,14 @@ import { RightsContext } from "./rights-context";
 export function UserRightsProvider({ children }) {
   const { currentUser, session } = useAuth();
   const currentUserId = currentUser?.id ?? null;
-  const [rights, setRights] = useState({
-    CUST_VIEW: 0,
-    CUST_ADD: 0,
-    CUST_EDIT: 0,
-    CUST_DEL: 0,
-    SALES_VIEW: 0,
-    SD_VIEW: 0,
-    PROD_VIEW: 0,
-    PRICE_VIEW: 0,
-    ADM_USER: 0,
-  });
+  const userType = currentUser?.user_type || "USER";
+  const [rights, setRights] = useState(() => createDefaultRights());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadUserRights = useCallback(async () => {
     if (!currentUserId || !session) {
-      setRights({
-        CUST_VIEW: 0,
-        CUST_ADD: 0,
-        CUST_EDIT: 0,
-        CUST_DEL: 0,
-        SALES_VIEW: 0,
-        SD_VIEW: 0,
-        PROD_VIEW: 0,
-        PRICE_VIEW: 0,
-        ADM_USER: 0,
-      });
+      setRights(createDefaultRights());
       return;
     }
 
@@ -64,17 +64,7 @@ export function UserRightsProvider({ children }) {
 
       if (queryError) throw queryError;
 
-      const rightsMap = {
-        CUST_VIEW: 0,
-        CUST_ADD: 0,
-        CUST_EDIT: 0,
-        CUST_DEL: 0,
-        SALES_VIEW: 0,
-        SD_VIEW: 0,
-        PROD_VIEW: 0,
-        PRICE_VIEW: 0,
-        ADM_USER: 0,
-      };
+      const rightsMap = createDefaultRights();
 
       if (data && Array.isArray(data)) {
         data.forEach((row) => {
@@ -109,12 +99,17 @@ export function UserRightsProvider({ children }) {
   );
 
   const isAdmin = useCallback(() => {
-    return rights.ADM_USER === 1;
-  }, [rights]);
+    return (
+      rights.ADM_USER === 1 ||
+      userType === "ADMIN" ||
+      userType === "SUPERADMIN"
+    );
+  }, [rights.ADM_USER, userType]);
 
   const value = useMemo(
     () => ({
       rights,
+      userType,
       loading,
       error,
       hasRight,
@@ -122,7 +117,16 @@ export function UserRightsProvider({ children }) {
       isAdmin,
       loadUserRights,
     }),
-    [rights, loading, error, hasRight, canEdit, isAdmin, loadUserRights],
+    [
+      rights,
+      userType,
+      loading,
+      error,
+      hasRight,
+      canEdit,
+      isAdmin,
+      loadUserRights,
+    ],
   );
 
   return (
