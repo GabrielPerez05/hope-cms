@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useRights } from "../hooks/useRights";
 
 const navLinks = [
   { to: "/customers", label: "Customers" },
@@ -12,8 +13,21 @@ const navLinks = [
 
 export function AppShell() {
   const { currentUser, signOut } = useAuth();
+  const { hasRight, userType } = useRights();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isAdminUser = userType === "ADMIN" || userType === "SUPERADMIN";
+  const visibleNavLinks = navLinks.filter((link) => {
+    if (link.to === "/admin") {
+      return isAdminUser || hasRight("ADM_USER");
+    }
+
+    if (link.to === "/deleted-customers") {
+      return isAdminUser;
+    }
+
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-50 text-slate-900">
@@ -62,7 +76,7 @@ export function AppShell() {
           <div
             className={`${isSidebarOpen ? "block" : "hidden"} space-y-2 px-4 lg:block lg:px-0`}
           >
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
