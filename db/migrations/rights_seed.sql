@@ -62,3 +62,83 @@ CROSS JOIN (
 WHERE lower(u.email) = 'jcesperanza@neu.edu.ph'
 ON CONFLICT ("userId", right_name) DO UPDATE SET
     right_value = EXCLUDED.right_value;
+
+-- Backfill app profiles for Auth users that already existed before the trigger
+-- or before this schema was installed.
+INSERT INTO public."user" ("userId", email, username, user_type, record_status)
+SELECT
+    au.id,
+    au.email,
+    COALESCE(
+        au.raw_user_meta_data->>'username',
+        au.raw_user_meta_data->>'full_name',
+        au.raw_user_meta_data->>'name',
+        au.email
+    ),
+    CASE
+        WHEN lower(au.email) = 'jcesperanza@neu.edu.ph' THEN 'SUPERADMIN'
+        WHEN lower(au.email) = 'rhiyanjoshua.ticbobolan@neu.edu.ph' THEN 'ADMIN'
+        ELSE 'USER'
+    END,
+    CASE
+        WHEN lower(au.email) IN (
+            'jcesperanza@neu.edu.ph',
+            'rhiyanjoshua.ticbobolan@neu.edu.ph'
+        ) THEN 'ACTIVE'
+        ELSE 'INACTIVE'
+    END
+FROM auth.users au
+ON CONFLICT ("userId") DO UPDATE SET
+    email = EXCLUDED.email,
+    username = EXCLUDED.username;
+
+INSERT INTO public.user_module ("userId", module_name, is_active)
+SELECT
+    u."userId",
+    modules.module_name,
+    CASE
+        WHEN u.user_type IN ('ADMIN', 'SUPERADMIN') THEN true
+        ELSE modules.module_name IN ('Customers', 'Sales', 'Products')
+    END
+FROM public."user" u
+CROSS JOIN (VALUES ('Customers'), ('Sales'), ('Products'), ('Admin')) AS modules(module_name)
+ON CONFLICT ("userId", module_name) DO NOTHING;
+
+INSERT INTO public.user_rights ("userId", right_name, right_value)
+SELECT
+    u."userId",
+    rights.right_name,
+    CASE
+        WHEN u.user_type = 'SUPERADMIN' THEN 1
+        WHEN u.user_type = 'ADMIN' THEN
+            CASE
+                WHEN rights.right_name IN (
+                    'CUST_VIEW',
+                    'CUST_ADD',
+                    'CUST_EDIT',
+                    'CUST_DEL',
+                    'SALES_VIEW',
+                    'SD_VIEW',
+                    'PROD_VIEW',
+                    'PRICE_VIEW',
+                    'ADM_USER'
+                ) THEN 1
+                ELSE 0
+            END
+        WHEN rights.right_name IN ('CUST_VIEW', 'SALES_VIEW', 'SD_VIEW', 'PROD_VIEW', 'PRICE_VIEW') THEN 1
+        ELSE 0
+    END
+FROM public."user" u
+CROSS JOIN (
+    VALUES
+        ('CUST_VIEW'),
+        ('CUST_ADD'),
+        ('CUST_EDIT'),
+        ('CUST_DEL'),
+        ('SALES_VIEW'),
+        ('SD_VIEW'),
+        ('PROD_VIEW'),
+        ('PRICE_VIEW'),
+        ('ADM_USER')
+) AS rights(right_name)
+ON CONFLICT ("userId", right_name) DO NOTHING;
