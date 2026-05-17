@@ -3,6 +3,7 @@ import { AppShell } from "./components/AppShell";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserRightsProvider } from "./contexts/UserRightsContext";
+import { useAuth } from "./hooks/useAuth";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -12,6 +13,17 @@ import { ProductsPage } from "./pages/ProductsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { DeletedCustomersPage } from "./pages/DeletedCustomersPage";
 import "./index.css";
+
+export function AdminOnlyRoute({ children }) {
+  const { currentUser } = useAuth();
+  const userType = currentUser?.user_type;
+
+  if (userType !== "ADMIN" && userType !== "SUPERADMIN") {
+    return <Navigate to="/customers" replace />;
+  }
+
+  return children;
+}
 
 function App() {
   return (
@@ -31,7 +43,14 @@ function App() {
               <Route path="sales" element={<SalesPage />} />
               <Route path="products" element={<ProductsPage />} />
               <Route path="admin" element={<AdminPage />} />
-              <Route path="deleted-customers" element={<DeletedCustomersPage />} />
+              <Route
+                path="deleted-customers"
+                element={
+                  <AdminOnlyRoute>
+                    <DeletedCustomersPage />
+                  </AdminOnlyRoute>
+                }
+              />
             </Route>
           </Route>
 

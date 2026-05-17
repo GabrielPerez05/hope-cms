@@ -6,6 +6,10 @@ function requireSupabase() {
   }
 }
 
+function makeStamp(action) {
+  return `${action}:${new Date().toISOString()}`.slice(0, 60);
+}
+
 export async function getCustomers(userType = "USER") {
   requireSupabase();
 
@@ -34,6 +38,7 @@ export async function addCustomer(customer) {
       address: customer.address,
       payterm: customer.payterm,
       record_status: "ACTIVE",
+      stamp: makeStamp("CREATED"),
     })
     .select()
     .single();
@@ -50,6 +55,7 @@ export async function updateCustomer(custNo, updates) {
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
+      stamp: makeStamp("UPDATED"),
     })
     .eq("custno", custNo)
     .select()
@@ -67,6 +73,7 @@ export async function softDeleteCustomer(custNo) {
     .update({
       record_status: "INACTIVE",
       updated_at: new Date().toISOString(),
+      stamp: makeStamp("DEACTIVATED"),
     })
     .eq("custno", custNo)
     .select()
@@ -84,6 +91,7 @@ export async function recoverCustomer(custNo) {
     .update({
       record_status: "ACTIVE",
       updated_at: new Date().toISOString(),
+      stamp: makeStamp("REACTIVATED"),
     })
     .eq("custno", custNo)
     .select()

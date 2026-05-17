@@ -8,6 +8,9 @@ ALTER TABLE public.customer
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 ALTER TABLE public.customer
+ADD COLUMN IF NOT EXISTS stamp VARCHAR(60);
+
+ALTER TABLE public.customer
 ADD COLUMN IF NOT EXISTS created_by VARCHAR(50);
 
 ALTER TABLE public.customer
