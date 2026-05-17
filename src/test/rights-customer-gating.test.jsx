@@ -95,11 +95,17 @@ describe("customer rights gating", () => {
 
     expect(await screen.findByText("Globus Medical")).toBeInTheDocument();
     expect(
+      screen.queryByRole("columnheader", { name: /actions/i }),
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByRole("button", { name: /edit/i }),
     ).not.toBeInTheDocument();
 
     renderCustomersPage({ rights: { CUST_EDIT: 1 } });
 
+    expect(
+      await screen.findByRole("columnheader", { name: /actions/i }),
+    ).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /edit/i })).toBeInTheDocument();
   });
 
@@ -144,6 +150,9 @@ describe("customer rights gating", () => {
     });
 
     const row = await screen.findByRole("row", { name: /c0001/i });
+    expect(
+      screen.queryByRole("columnheader", { name: /actions/i }),
+    ).not.toBeInTheDocument();
     expect(within(row).queryByRole("button")).not.toBeInTheDocument();
   });
 });
