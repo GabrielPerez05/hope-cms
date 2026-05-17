@@ -5,11 +5,13 @@ import {
   DataLoadingState,
 } from "../components/DataStates";
 import {
-  PAGE_SIZE,
   Pagination,
+} from "../components/Pagination";
+import {
+  PAGE_SIZE,
   clampPage,
   getPageItems,
-} from "../components/Pagination";
+} from "../lib/pagination";
 import { getCustomers } from "../lib/customer-api";
 import {
   getAllSalesDetail,
@@ -199,14 +201,6 @@ function SalesContent() {
   const currentPage = clampPage(page, totalPages);
   const pagedRows = getPageItems(filteredRows, currentPage);
 
-  useEffect(() => {
-    setPage(1);
-  }, [query]);
-
-  useEffect(() => {
-    setPage((current) => clampPage(current, totalPages));
-  }, [totalPages]);
-
   if (loading) return <DataLoadingState label="Loading sales records..." />;
   if (error) return <DataErrorState message={error} />;
 
@@ -222,7 +216,10 @@ function SalesContent() {
           </div>
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
             placeholder="Search sales"
             className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           />
