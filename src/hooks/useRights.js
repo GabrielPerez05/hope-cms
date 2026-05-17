@@ -5,7 +5,7 @@ import { RightsContext } from "../contexts/rights-context";
  * useRights - Custom hook to consume RightsContext
  * Must be used within UserRightsProvider
  *
- * Returns: { rights, loading, error, hasRight, canEdit, isAdmin, loadUserRights }
+ * Returns: { rights, userType, loading, error, hasRight, canEdit, isAdmin, loadUserRights }
  */
 export function useRights() {
   const context = useContext(RightsContext);
