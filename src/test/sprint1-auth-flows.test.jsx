@@ -133,7 +133,14 @@ describe("Sprint 1 authentication", () => {
     await user.type(await screen.findByLabelText(/last name/i), "Dela Cruz");
     await user.type(await screen.findByLabelText(/username/i), "juan.dc");
     await user.type(await screen.findByLabelText(/email/i), "juan@test.com");
-    await user.type(await screen.findByLabelText(/password/i), "password123");
+    await user.type(
+      await screen.findByPlaceholderText(/enter your password/i),
+      "password123",
+    );
+    await user.type(
+      await screen.findByPlaceholderText(/confirm your password/i),
+      "password123",
+    );
     await user.click(
       await screen.findByRole("button", { name: /create account/i }),
     );

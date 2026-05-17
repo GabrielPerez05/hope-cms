@@ -6,11 +6,13 @@ import {
   DataLoadingState,
 } from "../components/DataStates";
 import {
-  PAGE_SIZE,
   Pagination,
+} from "../components/Pagination";
+import {
+  PAGE_SIZE,
   clampPage,
   getPageItems,
-} from "../components/Pagination";
+} from "../lib/pagination";
 import { useAuth } from "../hooks/useAuth";
 import { useRights } from "../contexts/user-rights-context";
 import {
@@ -234,14 +236,6 @@ function CustomersContent() {
   const currentPage = clampPage(page, totalPages);
   const pagedCustomers = getPageItems(filteredCustomers, currentPage);
 
-  useEffect(() => {
-    setPage(1);
-  }, [payTerm, query]);
-
-  useEffect(() => {
-    setPage((current) => clampPage(current, totalPages));
-  }, [totalPages]);
-
   async function handleAddCustomer(payload) {
     const created = await addCustomer(payload);
     setCustomers((items) => [created || payload, ...items]);
@@ -302,13 +296,19 @@ function CustomersContent() {
         <div className="mt-6 grid gap-3 md:grid-cols-[1fr_180px]">
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
             placeholder="Search by name or pay term"
             className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           />
           <select
             value={payTerm}
-            onChange={(event) => setPayTerm(event.target.value)}
+            onChange={(event) => {
+              setPayTerm(event.target.value);
+              setPage(1);
+            }}
             className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           >
             <option value="ALL">All pay terms</option>
