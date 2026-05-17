@@ -18,7 +18,7 @@ function getTransNo(sale) {
 }
 
 function getSalesDate(sale) {
-  return sale.salesdate || sale.salesDate || "-";
+  return sale.salesdate || sale.salesdate || sale.salesDate || "-";
 }
 
 function getEmpNo(sale) {

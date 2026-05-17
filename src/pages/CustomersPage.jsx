@@ -5,6 +5,12 @@ import {
   DataErrorState,
   DataLoadingState,
 } from "../components/DataStates";
+import {
+  PAGE_SIZE,
+  Pagination,
+  clampPage,
+  getPageItems,
+} from "../components/Pagination";
 import { useAuth } from "../hooks/useAuth";
 import { useRights } from "../contexts/user-rights-context";
 import {
@@ -182,6 +188,7 @@ function CustomersContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
+  const [page, setPage] = useState(1);
   const canAdd = hasRight("CUST_ADD");
   const canEdit = hasRight("CUST_EDIT");
   const canSoftDelete = userType === "SUPERADMIN" && hasRight("CUST_DEL");
@@ -221,6 +228,18 @@ function CustomersContent() {
       return statusVisible && queryVisible && payTermVisible;
     });
   }, [customers, payTerm, query, userType]);
+
+  const totalPages = Math.ceil(filteredCustomers.length / PAGE_SIZE);
+  const currentPage = clampPage(page, totalPages);
+  const pagedCustomers = getPageItems(filteredCustomers, currentPage);
+
+  useEffect(() => {
+    setPage(1);
+  }, [payTerm, query]);
+
+  useEffect(() => {
+    setPage((current) => clampPage(current, totalPages));
+  }, [totalPages]);
 
   async function handleAddCustomer(payload) {
     const created = await addCustomer(payload);
@@ -316,7 +335,7 @@ function CustomersContent() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 border-t border-slate-100">
-              {filteredCustomers.map((customer) => (
+              {pagedCustomers.map((customer) => (
                 <tr key={customer.custno} className="hover:bg-emerald-50/50">
                   <td className="px-4 py-4 font-medium text-slate-900">
                     <Link
@@ -372,6 +391,11 @@ function CustomersContent() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={currentPage}
+          total={filteredCustomers.length}
+          onPageChange={setPage}
+        />
       </div>
 
       {modal?.type === "add" ? (

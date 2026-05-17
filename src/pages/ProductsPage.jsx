@@ -4,6 +4,12 @@ import {
   DataErrorState,
   DataLoadingState,
 } from "../components/DataStates";
+import {
+  PAGE_SIZE,
+  Pagination,
+  clampPage,
+  getPageItems,
+} from "../components/Pagination";
 import { getCurrentPrice, getProducts } from "../lib/sales-product-api";
 
 function getProdCode(product) {
@@ -26,6 +32,7 @@ function ProductCatalogueContent() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     let isMounted = true;
@@ -59,6 +66,10 @@ function ProductCatalogueContent() {
   if (loading) return <DataLoadingState label="Loading product catalogue..." />;
   if (error) return <DataErrorState message={error} />;
 
+  const totalPages = Math.ceil(products.length / PAGE_SIZE);
+  const currentPage = clampPage(page, totalPages);
+  const pagedProducts = getPageItems(products, currentPage);
+
   return (
     <section className="space-y-8">
       <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
@@ -82,7 +93,7 @@ function ProductCatalogueContent() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 border-t border-slate-100">
-              {products.map((product) => (
+              {pagedProducts.map((product) => (
                 <tr key={getProdCode(product)} className="hover:bg-emerald-50/50">
                   <td className="px-4 py-4 font-medium text-slate-900">
                     {getProdCode(product)}
@@ -99,6 +110,11 @@ function ProductCatalogueContent() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={currentPage}
+          total={products.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   );
