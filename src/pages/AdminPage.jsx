@@ -8,18 +8,17 @@ import {
   Pagination,
 } from "../components/Pagination";
 import {
-  PAGE_SIZE,
   clampPage,
   getPageItems,
 } from "../lib/pagination";
 import {
-  MODULES,
-  RIGHTS,
   getAdminUsers,
   updateAdminUser,
-  updateUserModule,
   updateUserRight,
+  DISPLAY_RIGHTS,
 } from "../lib/admin-api";
+import { useRights } from "../hooks/useRights";
+import { useAuth } from "../hooks/useAuth";
 
 const USER_TYPES = ["USER", "ADMIN", "SUPERADMIN"];
 const STATUSES = ["ACTIVE", "INACTIVE"];
@@ -33,11 +32,19 @@ export function AdminPage() {
 }
 
 function AdminContent() {
+  const { userType } = useRights();
+  const { currentUser } = useAuth();
+  const canEdit = userType === "ADMIN" || userType === "SUPERADMIN";
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState("");
+  const [filterType, setFilterType] = useState("ALL");
+  const [filterStatus, setFilterStatus] = useState("ALL");
+
+  const ADMIN_PAGE_SIZE = 5;
 
   async function loadUsers() {
     setLoading(true);
@@ -70,9 +77,27 @@ function AdminContent() {
     };
   }, [users]);
 
-  const totalPages = Math.ceil(users.length / PAGE_SIZE);
+  const filteredUsers = useMemo(() => {
+    return users
+      .filter((user) => {
+        const q = query.trim().toLowerCase();
+        const matchesQuery = !q ||
+          user.email?.toLowerCase().includes(q) ||
+          user.username?.toLowerCase().includes(q);
+        const matchesType = filterType === "ALL" || user.user_type === filterType;
+        const matchesStatus = filterStatus === "ALL" || user.record_status === filterStatus;
+        return matchesQuery && matchesType && matchesStatus;
+      })
+      .sort((a, b) => {
+        const nameA = (a.username || a.email || "").toLowerCase();
+        const nameB = (b.username || b.email || "").toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+  }, [users, query, filterType, filterStatus]);
+
+  const totalPages = Math.ceil(filteredUsers.length / ADMIN_PAGE_SIZE);
   const currentPage = clampPage(page, totalPages);
-  const pagedUsers = getPageItems(users, currentPage);
+  const pagedUsers = getPageItems(filteredUsers, currentPage, ADMIN_PAGE_SIZE);
 
   async function saveUser(userId, updates) {
     setSaving(userId);
@@ -89,24 +114,6 @@ function AdminContent() {
     }
   }
 
-  async function toggleModule(userId, moduleName, value) {
-    setSaving(`${userId}-${moduleName}`);
-    setError(null);
-    try {
-      await updateUserModule(userId, moduleName, value);
-      setUsers((items) =>
-        items.map((item) =>
-          item.userId === userId
-            ? { ...item, modules: { ...item.modules, [moduleName]: value } }
-            : item,
-        ),
-      );
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving("");
-    }
-  }
 
   async function toggleRight(userId, rightName, value) {
     setSaving(`${userId}-${rightName}`);
@@ -166,26 +173,78 @@ function AdminContent() {
           </p>
         </div>
 
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[180px]">
+            <input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              placeholder="Search by email or username"
+              className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 pr-9 text-sm outline-none focus:border-emerald-500"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => { setQuery(""); setPage(1); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          <select
+            value={filterType}
+            onChange={(e) => { setFilterType(e.target.value); setPage(1); }}
+            className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
+          >
+            <option value="ALL">All types</option>
+            {USER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+            className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
+          >
+            <option value="ALL">All statuses</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {(query || filterType !== "ALL" || filterStatus !== "ALL") && (
+            <button
+              type="button"
+              onClick={() => { setQuery(""); setFilterType("ALL"); setFilterStatus("ALL"); setPage(1); }}
+              className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
         {users.length === 0 ? (
           <p className="mt-6 text-sm text-slate-600">
             No app users found. Run `rights_seed.sql` and the provisioning trigger
             migration in Supabase, then refresh this page.
           </p>
         ) : (
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-4">
+            {filteredUsers.length === 0 ? (
+              <p className="text-sm text-slate-600">No users match your filters.</p>
+            ) : null}
             {pagedUsers.map((user) => (
               <UserAccessPanel
                 key={user.userId}
                 user={user}
                 saving={saving}
+                canEdit={canEdit}
+                viewerType={userType}
+                viewerId={currentUser?.id}
                 onSaveUser={saveUser}
-                onToggleModule={toggleModule}
                 onToggleRight={toggleRight}
               />
             ))}
             <Pagination
               page={currentPage}
-              total={users.length}
+              pageSize={ADMIN_PAGE_SIZE}
+              total={filteredUsers.length}
               onPageChange={setPage}
             />
           </div>
@@ -208,17 +267,42 @@ function StatCard({ label, value, note }) {
 function UserAccessPanel({
   user,
   saving,
+  canEdit,
+  viewerType,
+  viewerId,
   onSaveUser,
-  onToggleModule,
   onToggleRight,
 }) {
   const isSuperAdmin = user.user_type === "SUPERADMIN";
-  const disabled = Boolean(saving) || isSuperAdmin;
+  const isSelf = user.userId === viewerId;
+  const disabled = Boolean(saving) || isSuperAdmin || isSelf;
+  const availableTypes = viewerType === "SUPERADMIN"
+    ? USER_TYPES
+    : Array.from(new Set([user.user_type, ...USER_TYPES.filter((t) => t !== "SUPERADMIN")]));
+
+  if (!canEdit) {
+    return (
+      <div className="rounded-[1.5rem] border border-slate-100 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1">
+            <p className="font-semibold text-slate-900">{user.username || user.email}</p>
+            <p className="mt-1 text-sm text-slate-500">{user.email}</p>
+          </div>
+          <span className="rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600">
+            {user.user_type}
+          </span>
+          <span className={`rounded-2xl px-4 py-2 text-sm font-medium ${user.record_status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+            {user.record_status}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`rounded-[1.5rem] border p-4 ${isSuperAdmin ? "border-amber-200 bg-amber-50/50" : "border-slate-100"}`}
-      title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : undefined}
+      className={`rounded-[1.5rem] border p-4 ${isSuperAdmin ? "border-amber-200 bg-amber-50/50" : isSelf ? "border-slate-200 bg-slate-50/50" : "border-slate-100"}`}
+      title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : isSelf ? "You cannot modify your own account" : undefined}
     >
       <div className="grid gap-4 xl:grid-cols-[1.4fr_180px_180px] xl:items-center">
         <div>
@@ -247,7 +331,7 @@ function UserAccessPanel({
           }
           className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {USER_TYPES.map((type) => (
+          {availableTypes.map((type) => (
             <option key={type} value={type}>
               {type}
             </option>
@@ -269,56 +353,67 @@ function UserAccessPanel({
         </select>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-2">
-        <AccessGroup title="Modules">
-          {MODULES.map((moduleName) => (
-            <Toggle
-              key={moduleName}
-              label={moduleName}
-              checked={Boolean(user.modules?.[moduleName])}
-              disabled={disabled}
-              onChange={(value) => onToggleModule(user.userId, moduleName, value)}
-            />
-          ))}
-        </AccessGroup>
-        <AccessGroup title="Rights">
-          {RIGHTS.map((rightName) => (
-            <Toggle
-              key={rightName}
-              label={rightName}
-              checked={Boolean(user.rights?.[rightName])}
-              disabled={disabled}
-              onChange={(value) => onToggleRight(user.userId, rightName, value)}
-            />
-          ))}
-        </AccessGroup>
-      </div>
+      {viewerType === "SUPERADMIN" && (
+        <div className="mt-4">
+          <RightsDropdown user={user} disabled={disabled} onToggleRight={onToggleRight} />
+        </div>
+      )}
     </div>
   );
 }
 
-function AccessGroup({ title, children }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-        {title}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-2">{children}</div>
-    </div>
-  );
-}
+function RightsDropdown({ user, disabled, onToggleRight }) {
+  const [open, setOpen] = useState(false);
+  const enabledCount = DISPLAY_RIGHTS.filter((r) => Boolean(user.rights?.[r])).length;
 
-function Toggle({ label, checked, disabled, onChange }) {
   return (
-    <label className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${disabled ? "cursor-not-allowed border-slate-100 text-slate-400" : "border-slate-200 text-slate-700"}`}>
-      <input
-        type="checkbox"
-        checked={checked}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 accent-emerald-700 disabled:cursor-not-allowed"
-      />
-      {label}
-    </label>
+      >
+        <span>Rights</span>
+        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+          {enabledCount}/{DISPLAY_RIGHTS.length}
+        </span>
+        <svg
+          className={`h-4 w-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-1 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Permissions
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {DISPLAY_RIGHTS.map((rightName) => (
+              <label
+                key={rightName}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${
+                  disabled
+                    ? "cursor-not-allowed border-slate-100 text-slate-400"
+                    : "cursor-pointer border-slate-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(user.rights?.[rightName])}
+                  disabled={disabled}
+                  onChange={(e) => onToggleRight(user.userId, rightName, e.target.checked)}
+                  className="h-4 w-4 accent-emerald-700 disabled:cursor-not-allowed"
+                />
+                {rightName}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

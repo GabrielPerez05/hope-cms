@@ -9,7 +9,6 @@ import {
   Pagination,
 } from "../components/Pagination";
 import {
-  PAGE_SIZE,
   clampPage,
   getPageItems,
 } from "../lib/pagination";
@@ -28,14 +27,35 @@ function getStatus(customer) {
   return customer.record_status || "ACTIVE";
 }
 
-function getStamp(customer) {
-  return (
-    customer.updated_at ||
-    customer.created_at ||
-    customer.stamp ||
-    customer.date_updated ||
-    "-"
-  );
+function formatStamp(customer) {
+  const raw = customer.stamp || customer.updated_at || customer.created_at || customer.date_updated;
+  if (!raw) return "-";
+
+  const colonIdx = raw.indexOf(":");
+  const possibleAction = colonIdx > 0 ? raw.slice(0, colonIdx) : "";
+
+  if (/^[A-Z]+$/.test(possibleAction)) {
+    const dateStr = raw.slice(colonIdx + 1);
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const label = possibleAction.charAt(0) + possibleAction.slice(1).toLowerCase();
+      const formatted = date.toLocaleString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit", hour12: true,
+      });
+      return `${label} · ${formatted}`;
+    }
+  }
+
+  const date = new Date(raw);
+  if (!isNaN(date.getTime())) {
+    return date.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true,
+    });
+  }
+
+  return raw;
 }
 
 function CustomerFormModal({ mode, customer, onClose, onSubmit }) {
@@ -60,7 +80,11 @@ function CustomerFormModal({ mode, customer, onClose, onSubmit }) {
       return;
     }
 
-    await onSubmit(form);
+    try {
+      await onSubmit(form);
+    } catch (err) {
+      setError(err.message || "Failed to save changes.");
+    }
   }
 
   return (
@@ -143,6 +167,16 @@ function CustomerFormModal({ mode, customer, onClose, onSubmit }) {
   );
 }
 
+function StatCard({ label, value, note }) {
+  return (
+    <div className="rounded-[1.75rem] bg-white p-5 shadow-sm">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="mt-3 text-2xl font-semibold text-slate-900">{value}</p>
+      <p className="mt-2 text-sm text-emerald-700">{note}</p>
+    </div>
+  );
+}
+
 function SoftDeleteConfirmDialog({ customer, onCancel, onConfirm }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6">
@@ -191,6 +225,7 @@ function CustomersContent() {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const canAdd = hasRight("CUST_ADD");
   const canEdit = hasRight("CUST_EDIT");
   const canSoftDelete = userType === "SUPERADMIN" && hasRight("CUST_DEL");
@@ -219,6 +254,18 @@ function CustomersContent() {
     };
   }, [currentUser?.user_type]);
 
+  const stats = useMemo(() => {
+    const active = customers.filter((c) => getStatus(c) === "ACTIVE").length;
+    const inactive = customers.filter((c) => getStatus(c) === "INACTIVE").length;
+    const payTermCounts = customers.reduce((acc, c) => {
+      const term = c.payterm || "N/A";
+      acc[term] = (acc[term] || 0) + 1;
+      return acc;
+    }, {});
+    const topEntry = Object.entries(payTermCounts).sort((a, b) => b[1] - a[1])[0];
+    return { total: customers.length, active, inactive, topPayTerm: topEntry ? topEntry[0] : "-" };
+  }, [customers]);
+
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
       const statusVisible =
@@ -232,9 +279,9 @@ function CustomersContent() {
     });
   }, [customers, payTerm, query, userType]);
 
-  const totalPages = Math.ceil(filteredCustomers.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredCustomers.length / pageSize);
   const currentPage = clampPage(page, totalPages);
-  const pagedCustomers = getPageItems(filteredCustomers, currentPage);
+  const pagedCustomers = getPageItems(filteredCustomers, currentPage, pageSize);
 
   async function handleAddCustomer(payload) {
     const created = await addCustomer(payload);
@@ -319,6 +366,13 @@ function CustomersContent() {
             ))}
           </select>
         </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Total customers" value={stats.total} note="All visible accounts" />
+          <StatCard label="Active" value={stats.active} note="In active workflows" />
+          <StatCard label="Inactive" value={stats.inactive} note="Soft-deleted" />
+          <StatCard label="Top pay term" value={stats.topPayTerm} note="Most used" />
+        </div>
       </div>
 
       <div className="rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-sm">
@@ -362,7 +416,7 @@ function CustomersContent() {
                   </td>
                   {showStamp ? (
                     <td className="px-4 py-4 text-slate-600">
-                      {getStamp(customer)}
+                      {formatStamp(customer)}
                     </td>
                   ) : null}
                   {showActionsColumn ? (
@@ -398,8 +452,10 @@ function CustomersContent() {
         </div>
         <Pagination
           page={currentPage}
+          pageSize={pageSize}
           total={filteredCustomers.length}
           onPageChange={setPage}
+          onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         />
       </div>
 

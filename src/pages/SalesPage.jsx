@@ -8,7 +8,6 @@ import {
   Pagination,
 } from "../components/Pagination";
 import {
-  PAGE_SIZE,
   clampPage,
   getPageItems,
 } from "../lib/pagination";
@@ -19,6 +18,7 @@ import {
   getProducts,
   getSales,
 } from "../lib/sales-product-api";
+import { useRights } from "../hooks/useRights";
 
 function getTransNo(sale) {
   return sale.transno || sale.transNo;
@@ -65,6 +65,9 @@ export function SalesPage() {
 }
 
 function SalesContent() {
+  const { hasRight } = useRights();
+  const canViewDetail = hasRight("SD_VIEW");
+  const canViewPrice = hasRight("PRICE_VIEW");
   const [sales, setSales] = useState([]);
   const [details, setDetails] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -75,6 +78,7 @@ function SalesContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     let isMounted = true;
@@ -197,9 +201,9 @@ function SalesContent() {
     });
   }, [query, report.rows]);
 
-  const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredRows.length / pageSize);
   const currentPage = clampPage(page, totalPages);
-  const pagedRows = getPageItems(filteredRows, currentPage);
+  const pagedRows = getPageItems(filteredRows, currentPage, pageSize);
 
   if (loading) return <DataLoadingState label="Loading sales records..." />;
   if (error) return <DataErrorState message={error} />;
@@ -226,22 +230,10 @@ function SalesContent() {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            label="Revenue"
-            value={formatMoney(report.totalRevenue)}
-            note="Latest price history"
-          />
+          {canViewPrice && <StatCard label="Revenue" value={formatMoney(report.totalRevenue)} note="Latest price history" />}
           <StatCard label="Transactions" value={sales.length} note="Sales rows" />
-          <StatCard
-            label="Line quantity"
-            value={report.itemCount.toLocaleString()}
-            note="Sales detail units"
-          />
-          <StatCard
-            label="Average sale"
-            value={formatMoney(report.averageSale)}
-            note="Revenue per transaction"
-          />
+          <StatCard label="Line quantity" value={report.itemCount.toLocaleString()} note="Sales detail units" />
+          {canViewPrice && <StatCard label="Average sale" value={formatMoney(report.averageSale)} note="Revenue per transaction" />}
         </div>
       </div>
 
@@ -267,15 +259,15 @@ function SalesContent() {
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Customer</th>
                     <th className="px-4 py-3">Emp No</th>
-                    <th className="px-4 py-3">Total</th>
+                    {canViewPrice && <th className="px-4 py-3">Total</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 border-t border-slate-100">
                   {pagedRows.map((sale) => (
                     <tr
                       key={sale.transNo}
-                      onClick={() => setSelectedSale(sale)}
-                      className="cursor-pointer hover:bg-emerald-50/50"
+                      onClick={canViewDetail ? () => setSelectedSale(sale) : undefined}
+                      className={canViewDetail ? "cursor-pointer hover:bg-emerald-50/50" : ""}
                     >
                       <td className="px-4 py-4 font-medium text-emerald-700">
                         {sale.transNo}
@@ -289,17 +281,21 @@ function SalesContent() {
                       <td className="px-4 py-4 text-slate-600">
                         {getEmpNo(sale)}
                       </td>
-                      <td className="px-4 py-4 font-semibold text-slate-900">
-                        {formatMoney(sale.total)}
-                      </td>
+                      {canViewPrice && (
+                        <td className="px-4 py-4 font-semibold text-slate-900">
+                          {formatMoney(sale.total)}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
               <Pagination
                 page={currentPage}
+                pageSize={pageSize}
                 total={filteredRows.length}
                 onPageChange={setPage}
+                onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
               />
             </div>
           )}
@@ -346,6 +342,7 @@ function SalesContent() {
           sale={selectedSale}
           productMap={report.productMap}
           priceMap={report.latestPriceMap}
+          canViewPrice={canViewPrice}
           onClose={() => setSelectedSale(null)}
         />
       ) : null}
@@ -357,13 +354,13 @@ function StatCard({ label, value, note }) {
   return (
     <div className="rounded-[1.75rem] bg-white p-5 shadow-sm">
       <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-semibold text-slate-900">{value}</p>
+      <p className="mt-3 text-2xl font-semibold text-slate-900">{value}</p>
       <p className="mt-2 text-sm text-emerald-700">{note}</p>
     </div>
   );
 }
 
-function SalesDetailDialog({ sale, productMap, priceMap, onClose }) {
+function SalesDetailDialog({ sale, productMap, priceMap, canViewPrice, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6">
       <div className="w-full max-w-3xl rounded-[2rem] bg-white p-6 shadow-2xl">
@@ -391,8 +388,8 @@ function SalesDetailDialog({ sale, productMap, priceMap, onClose }) {
               <tr>
                 <th className="px-4 py-3">Product</th>
                 <th className="px-4 py-3">Quantity</th>
-                <th className="px-4 py-3">Unit Price</th>
-                <th className="px-4 py-3">Line Total</th>
+                {canViewPrice && <th className="px-4 py-3">Unit Price</th>}
+                {canViewPrice && <th className="px-4 py-3">Line Total</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -407,12 +404,16 @@ function SalesDetailDialog({ sale, productMap, priceMap, onClose }) {
                       {product?.description || prodCode}
                     </td>
                     <td className="px-4 py-4 text-slate-600">{quantity}</td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {formatMoney(unitPrice)}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-slate-900">
-                      {formatMoney(quantity * unitPrice)}
-                    </td>
+                    {canViewPrice && (
+                      <td className="px-4 py-4 text-slate-600">
+                        {formatMoney(unitPrice)}
+                      </td>
+                    )}
+                    {canViewPrice && (
+                      <td className="px-4 py-4 font-semibold text-slate-900">
+                        {formatMoney(quantity * unitPrice)}
+                      </td>
+                    )}
                   </tr>
                 );
               })}

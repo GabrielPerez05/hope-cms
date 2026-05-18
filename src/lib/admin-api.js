@@ -103,4 +103,9 @@ export async function updateUserRight(userId, rightName, isEnabled) {
   if (error) throw error;
 }
 
-export { MODULES, RIGHTS };
+// CUST_DEL is excluded from the panel because soft-delete is always gated
+// by userType === "SUPERADMIN" in code — the checkbox has no functional effect
+// for any non-SUPERADMIN account, and SUPERADMIN rows are protected anyway.
+const DISPLAY_RIGHTS = RIGHTS.filter((r) => r !== "CUST_DEL");
+
+export { MODULES, RIGHTS, DISPLAY_RIGHTS };

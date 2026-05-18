@@ -15,14 +15,35 @@ import {
 import { useRights } from "../contexts/user-rights-context";
 import { getCustomers, recoverCustomer } from "../lib/customer-api";
 
-function getStamp(customer) {
-  return (
-    customer.updated_at ||
-    customer.created_at ||
-    customer.stamp ||
-    customer.date_updated ||
-    "-"
-  );
+function formatStamp(customer) {
+  const raw = customer.stamp || customer.updated_at || customer.created_at || customer.date_updated;
+  if (!raw) return "-";
+
+  const colonIdx = raw.indexOf(":");
+  const possibleAction = colonIdx > 0 ? raw.slice(0, colonIdx) : "";
+
+  if (/^[A-Z]+$/.test(possibleAction)) {
+    const dateStr = raw.slice(colonIdx + 1);
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const label = possibleAction.charAt(0) + possibleAction.slice(1).toLowerCase();
+      const formatted = date.toLocaleString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit", hour12: true,
+      });
+      return `${label} · ${formatted}`;
+    }
+  }
+
+  const date = new Date(raw);
+  if (!isNaN(date.getTime())) {
+    return date.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true,
+    });
+  }
+
+  return raw;
 }
 
 export function DeletedCustomersPage() {
@@ -127,7 +148,7 @@ function DeletedCustomersContent() {
                       {customer.payterm}
                     </td>
                     <td className="px-4 py-4 text-slate-600">
-                      {getStamp(customer)}
+                      {formatStamp(customer)}
                     </td>
                     {canRecover ? (
                       <td className="px-4 py-4">

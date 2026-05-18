@@ -18,14 +18,11 @@ export function AppShell() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isAdminUser = userType === "ADMIN" || userType === "SUPERADMIN";
   const visibleNavLinks = navLinks.filter((link) => {
-    if (link.to === "/admin") {
-      return isAdminUser || hasRight("ADM_USER");
-    }
-
-    if (link.to === "/deleted-customers") {
-      return isAdminUser;
-    }
-
+    if (link.to === "/customers") return isAdminUser || hasRight("CUST_VIEW");
+    if (link.to === "/sales") return isAdminUser || hasRight("SALES_VIEW");
+    if (link.to === "/products") return isAdminUser || hasRight("PROD_VIEW");
+    if (link.to === "/admin") return isAdminUser || hasRight("ADM_USER");
+    if (link.to === "/deleted-customers") return isAdminUser;
     return true;
   });
 
