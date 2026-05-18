@@ -212,16 +212,32 @@ function UserAccessPanel({
   onToggleModule,
   onToggleRight,
 }) {
-  const disabled = Boolean(saving);
+  const isSuperAdmin = user.user_type === "SUPERADMIN";
+  const disabled = Boolean(saving) || isSuperAdmin;
 
   return (
-    <div className="rounded-[1.5rem] border border-slate-100 p-4">
+    <div
+      className={`rounded-[1.5rem] border p-4 ${isSuperAdmin ? "border-amber-200 bg-amber-50/50" : "border-slate-100"}`}
+      title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : undefined}
+    >
       <div className="grid gap-4 xl:grid-cols-[1.4fr_180px_180px] xl:items-center">
         <div>
-          <p className="font-semibold text-slate-900">
-            {user.username || user.email}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-slate-900">
+              {user.username || user.email}
+            </p>
+            {isSuperAdmin && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                Protected
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-slate-500">{user.email}</p>
+          {isSuperAdmin && (
+            <p className="mt-1 text-xs text-amber-700">
+              SUPERADMIN accounts cannot be modified
+            </p>
+          )}
         </div>
         <select
           value={user.user_type}
@@ -229,7 +245,7 @@ function UserAccessPanel({
           onChange={(event) =>
             onSaveUser(user.userId, { user_type: event.target.value })
           }
-          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {USER_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -243,7 +259,7 @@ function UserAccessPanel({
           onChange={(event) =>
             onSaveUser(user.userId, { record_status: event.target.value })
           }
-          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -294,13 +310,13 @@ function AccessGroup({ title, children }) {
 
 function Toggle({ label, checked, disabled, onChange }) {
   return (
-    <label className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700">
+    <label className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${disabled ? "cursor-not-allowed border-slate-100 text-slate-400" : "border-slate-200 text-slate-700"}`}>
       <input
         type="checkbox"
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 accent-emerald-700"
+        className="h-4 w-4 accent-emerald-700 disabled:cursor-not-allowed"
       />
       {label}
     </label>

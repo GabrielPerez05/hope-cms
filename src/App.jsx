@@ -8,6 +8,7 @@ import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { CustomersPage } from "./pages/CustomersPage";
+import { CustomerDetailPage } from "./pages/CustomerDetailPage";
 import { SalesPage } from "./pages/SalesPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { AdminPage } from "./pages/AdminPage";
@@ -40,6 +41,7 @@ function App() {
             <Route path="/" element={<AppShell />}>
               <Route index element={<Navigate to="/customers" replace />} />
               <Route path="customers" element={<CustomersPage />} />
+              <Route path="customers/:custNo" element={<CustomerDetailPage />} />
               <Route path="sales" element={<SalesPage />} />
               <Route path="products" element={<ProductsPage />} />
               <Route path="admin" element={<AdminPage />} />
