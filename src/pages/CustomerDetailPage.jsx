@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useRights } from "../hooks/useRights";
 import {
   DataErrorBoundary,
   DataErrorState,
@@ -88,6 +89,8 @@ function SalesDetailModal({ transaction, items, onClose }) {
 
 function CustomerDetailContent() {
   const { custNo } = useParams();
+  const { hasRight } = useRights();
+  const canViewDetail = hasRight("SD_VIEW");
   const [customer, setCustomer] = useState(null);
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
@@ -212,8 +215,8 @@ function CustomerDetailContent() {
               {sales.map((sale) => (
                 <tr
                   key={getTransNo(sale)}
-                  onClick={() => openTransaction(getTransNo(sale))}
-                  className="cursor-pointer hover:bg-emerald-50/50"
+                  onClick={canViewDetail ? () => openTransaction(getTransNo(sale)) : undefined}
+                  className={canViewDetail ? "cursor-pointer hover:bg-emerald-50/50" : ""}
                 >
                   <td className="px-4 py-4 font-medium text-emerald-700">
                     {getTransNo(sale)}

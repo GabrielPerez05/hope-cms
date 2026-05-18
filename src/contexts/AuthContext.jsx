@@ -19,6 +19,9 @@ async function fetchAppUser(session) {
     return null;
   }
 
+  // data is null when no public.user row exists yet — treat as no profile
+  if (!data) return null;
+
   return { ...session.user, ...data };
 }
 
@@ -36,7 +39,7 @@ function normalizeUser(userData) {
       metadata.name ||
       userData.email,
     user_type: userData.user_type || "USER",
-    record_status: userData.record_status || "ACTIVE",
+    record_status: userData.record_status || "INACTIVE",
   };
 }
 
@@ -61,9 +64,17 @@ export function AuthProvider({ children }) {
       }
 
       const appUser = await fetchAppUser(nextSession);
-      const normalized = normalizeUser(appUser || nextSession.user);
 
-      // LOGIN GUARD: Block INACTIVE accounts
+      // LOGIN GUARD: Block if no app profile exists or account is INACTIVE
+      if (!appUser) {
+        await supabase.auth.signOut();
+        setCurrentUser(null);
+        setError(inactiveAccountMessage);
+        return { ok: false, error: inactiveAccountMessage };
+      }
+
+      const normalized = normalizeUser(appUser);
+
       if (normalized?.record_status !== "ACTIVE") {
         await supabase.auth.signOut();
         setCurrentUser(null);

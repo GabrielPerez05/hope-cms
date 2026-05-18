@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 export function LoginPage() {
@@ -10,6 +10,8 @@ export function LoginPage() {
   const { currentUser, signIn, signInWithGoogle, error, loading, clearError } =
     useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const urlError = new URLSearchParams(location.search).get("error");
 
   useEffect(() => {
     if (currentUser) {
@@ -159,9 +161,9 @@ export function LoginPage() {
               </p>
             </div>
 
-            {formError || error ? (
+            {formError || error || urlError ? (
               <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700 shadow-sm">
-                {formError || error}
+                {formError || error || urlError}
               </div>
             ) : null}
 
