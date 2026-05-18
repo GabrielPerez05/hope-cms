@@ -116,7 +116,6 @@ SELECT
                     'CUST_VIEW',
                     'CUST_ADD',
                     'CUST_EDIT',
-                    'CUST_DEL',
                     'SALES_VIEW',
                     'SD_VIEW',
                     'PROD_VIEW',

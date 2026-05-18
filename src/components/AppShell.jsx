@@ -97,70 +97,10 @@ export function AppShell() {
             <p className="mt-1 truncate text-sm">{currentUser?.email}</p>
           </div>
 
-          <div className="mt-6 rounded-[1.75rem] border border-emerald-100 bg-slate-950/5 p-4 text-sm text-slate-700">
-            <p className="font-semibold text-emerald-700">Quick stats</p>
-            <div className="mt-3 space-y-3">
-              <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
-                <span className="text-xs text-slate-500">Customers</span>
-                <strong className="text-sm text-slate-900">1.2K</strong>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
-                <span className="text-xs text-slate-500">Sales</span>
-                <strong className="text-sm text-slate-900">289</strong>
-              </div>
-            </div>
-          </div>
         </aside>
 
         <main className="flex-1 rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-sm lg:p-8">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-emerald-700">
-                Workspace overview
-              </p>
-              <h1 className="text-3xl font-semibold text-slate-900">
-                Empower your team with Hope CMS
-              </h1>
-            </div>
-            <div className="space-y-2 rounded-3xl bg-emerald-50 p-4 text-sm text-slate-700 shadow-sm">
-              <p className="font-semibold text-emerald-700">Current plan</p>
-              <p>Team growth plan</p>
-              <p className="text-xs text-slate-500">Updated 2 hours ago</p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Active customers</p>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">
-                1,241
-              </p>
-              <p className="mt-2 text-sm text-emerald-700">+14.3% this month</p>
-            </div>
-            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Monthly revenue</p>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">
-                $82.4K
-              </p>
-              <p className="mt-2 text-sm text-emerald-700">
-                +9.8% vs last period
-              </p>
-            </div>
-            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Open opportunities</p>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">24</p>
-              <p className="mt-2 text-sm text-emerald-700">3 new leads today</p>
-            </div>
-            <div className="rounded-[1.75rem] bg-emerald-50 p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Support tickets</p>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">8</p>
-              <p className="mt-2 text-sm text-emerald-700">Resolve faster</p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
       </div>
     </div>
