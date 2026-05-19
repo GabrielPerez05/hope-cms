@@ -147,4 +147,35 @@ export async function updateLastSeen() {
   }
 }
 
+// Alias used by Sprint 3 Admin API PR — cleaner name for external consumers
+export const getUsers = getAdminUsers;
+
+export async function activateUser(userId) {
+  requireSupabase();
+  const { data: target, error: fetchError } = await supabase
+    .from("user")
+    .select("user_type")
+    .eq("userId", userId)
+    .single();
+  if (fetchError) throw fetchError;
+  if (target?.user_type === "SUPERADMIN") {
+    throw new Error("SUPERADMIN accounts cannot be modified.");
+  }
+  return updateAdminUser(userId, { record_status: "ACTIVE" });
+}
+
+export async function deactivateUser(userId) {
+  requireSupabase();
+  const { data: target, error: fetchError } = await supabase
+    .from("user")
+    .select("user_type")
+    .eq("userId", userId)
+    .single();
+  if (fetchError) throw fetchError;
+  if (target?.user_type === "SUPERADMIN") {
+    throw new Error("SUPERADMIN accounts cannot be modified.");
+  }
+  return updateAdminUser(userId, { record_status: "INACTIVE" });
+}
+
 export { MODULES, RIGHTS, DISPLAY_RIGHTS };
