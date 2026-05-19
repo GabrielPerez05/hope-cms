@@ -4,15 +4,30 @@ import { useAuth } from "../hooks/useAuth";
 import { useRights } from "../hooks/useRights";
 import { useHeartbeat } from "../hooks/useHeartbeat";
 
-const navLinks = [
-  { to: "/customers", label: "Customers" },
-  { to: "/sales", label: "Sales" },
-  { to: "/products", label: "Products" },
-  { to: "/reports/customer-summary", label: "Customer Summary", right: "PRICE_VIEW" },
-  { to: "/reports/top-customers", label: "Top Customers", right: "PRICE_VIEW" },
-  { to: "/reports/product-revenue", label: "Product Revenue", right: "PRICE_VIEW" },
-  { to: "/admin", label: "Admin" },
-  { to: "/deleted-customers", label: "Deleted Customers" },
+const navGroups = [
+  {
+    label: "Main",
+    links: [
+      { to: "/customers", label: "Customers" },
+      { to: "/sales", label: "Sales" },
+      { to: "/products", label: "Products" },
+    ],
+  },
+  {
+    label: "Reports",
+    links: [
+      { to: "/reports/customer-summary", label: "Customer Summary", right: "PRICE_VIEW" },
+      { to: "/reports/top-customers", label: "Top Customers", right: "PRICE_VIEW" },
+      { to: "/reports/product-revenue", label: "Product Revenue", right: "PRICE_VIEW" },
+    ],
+  },
+  {
+    label: "Administration",
+    links: [
+      { to: "/admin", label: "Admin" },
+      { to: "/deleted-customers", label: "Deleted Customers" },
+    ],
+  },
 ];
 
 export function AppShell() {
@@ -22,15 +37,22 @@ export function AppShell() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   useHeartbeat();
   const isAdminUser = userType === "ADMIN" || userType === "SUPERADMIN";
-  const visibleNavLinks = navLinks.filter((link) => {
+
+  function isLinkVisible(link) {
     if (link.to === "/customers") return isAdminUser || hasRight("CUST_VIEW");
     if (link.to === "/sales") return isAdminUser || hasRight("SALES_VIEW");
     if (link.to === "/products") return isAdminUser || hasRight("PROD_VIEW");
-    if (link.right) return isAdminUser || hasRight(link.right);
+    if (link.right) return userType === "SUPERADMIN" || hasRight(link.right);
     if (link.to === "/admin") return isAdminUser || hasRight("ADM_USER");
     if (link.to === "/deleted-customers") return isAdminUser;
     return true;
-  });
+  }
+
+  const visibleGroups = navGroups
+    .map((group) => ({ ...group, links: group.links.filter(isLinkVisible) }))
+    .filter((group) => group.links.length > 0);
+
+  const visibleNavLinks = visibleGroups.flatMap((g) => g.links);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-50 text-slate-900">
@@ -88,19 +110,33 @@ export function AppShell() {
               <p className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
                 No pages available. Contact your administrator.
               </p>
-            ) : visibleNavLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setIsSidebarOpen(false)}
-                className={`block rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                  location.pathname === link.to || location.pathname.startsWith(link.to + "/")
-                    ? "bg-emerald-700 text-white"
-                    : "text-emerald-700 hover:bg-emerald-50"
-                }`}
-              >
-                {link.label}
-              </Link>
+            ) : visibleGroups.map((group, groupIdx) => (
+              <div key={group.label}>
+                {groupIdx > 0 && (
+                  <div className="my-3 flex items-center gap-2">
+                    <div className="h-px flex-1 bg-emerald-100" />
+                  </div>
+                )}
+                <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  {group.label}
+                </p>
+                <div className="space-y-1">
+                  {group.links.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setIsSidebarOpen(false)}
+                      className={`block rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                        location.pathname === link.to || location.pathname.startsWith(link.to + "/")
+                          ? "bg-emerald-700 text-white"
+                          : "text-emerald-700 hover:bg-emerald-50"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
 

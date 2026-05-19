@@ -340,7 +340,8 @@ function UserAccessPanel({
 }) {
   const isSuperAdmin = user.user_type === "SUPERADMIN";
   const isSelf = user.userId === viewerId;
-  const disabled = Boolean(saving) || isSuperAdmin || isSelf;
+  const isAdminViewingPeer = viewerType === "ADMIN" && user.user_type !== "USER";
+  const disabled = Boolean(saving) || isSuperAdmin || isSelf || isAdminViewingPeer;
   const availableTypes = viewerType === "SUPERADMIN"
     ? USER_TYPES
     : Array.from(new Set([user.user_type, ...USER_TYPES.filter((t) => t !== "SUPERADMIN")]));
@@ -370,7 +371,7 @@ function UserAccessPanel({
   return (
     <div
       className={`rounded-[1.5rem] border p-4 ${isSuperAdmin ? "border-amber-200 bg-amber-50/50" : isSelf ? "border-slate-200 bg-slate-50/50" : "border-slate-100"}`}
-      title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : isSelf ? "You cannot modify your own account" : undefined}
+      title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : isSelf ? "You cannot modify your own account" : isAdminViewingPeer ? "ADMIN accounts can only be modified by SUPERADMIN" : undefined}
     >
       <div className={`grid gap-4 xl:items-center ${viewerType === "SUPERADMIN" ? "xl:grid-cols-[1.4fr_180px_180px]" : "xl:grid-cols-[1.4fr_180px]"}`}>
         <div>
@@ -386,7 +387,12 @@ function UserAccessPanel({
             )}
           </div>
           <p className="mt-1 text-sm text-slate-500">{user.email}</p>
-          <p className="mt-1 text-xs text-slate-400">{user.user_type}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <p className="text-xs text-slate-400">{user.user_type}</p>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${user.record_status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+              {user.record_status}
+            </span>
+          </div>
           {isSuperAdmin && (
             <p className="mt-1 text-xs text-amber-700">
               SUPERADMIN accounts cannot be modified
