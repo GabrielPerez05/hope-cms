@@ -36,7 +36,10 @@ function formatStamp(customer) {
   const possibleAction = colonIdx > 0 ? raw.slice(0, colonIdx) : "";
 
   if (/^[A-Z]+$/.test(possibleAction)) {
-    const dateStr = raw.slice(colonIdx + 1);
+    const rest = raw.slice(colonIdx + 1);
+    const pipeIdx = rest.indexOf("|");
+    const dateStr = pipeIdx > 0 ? rest.slice(0, pipeIdx) : rest;
+    const note = pipeIdx > 0 ? rest.slice(pipeIdx + 1) : "";
     const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {
       const label = possibleAction.charAt(0) + possibleAction.slice(1).toLowerCase();
@@ -44,7 +47,7 @@ function formatStamp(customer) {
         month: "short", day: "numeric", year: "numeric",
         hour: "numeric", minute: "2-digit", hour12: true,
       });
-      return `${label} · ${formatted}`;
+      return note ? `${label} · ${formatted} — ${note}` : `${label} · ${formatted}`;
     }
   }
 
@@ -179,14 +182,25 @@ function StatCard({ label, value, note }) {
 }
 
 function SoftDeleteConfirmDialog({ customer, onCancel, onConfirm }) {
+  const [reason, setReason] = useState("");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6">
       <div className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-2xl">
         <h2 className="text-xl font-semibold text-slate-900">Are you sure?</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Soft delete {customer.custname}? This moves the customer out of active
-          workflows.
+          Soft delete <span className="font-medium">{customer.custname}</span>? This moves the customer out of active workflows.
         </p>
+        <label className="mt-4 block text-sm font-semibold text-slate-700">
+          Reason <span className="font-normal text-slate-400">(optional)</span>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Brief reason for deactivation…"
+            rows={3}
+            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-normal outline-none focus:border-rose-400"
+          />
+        </label>
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
@@ -197,7 +211,7 @@ function SoftDeleteConfirmDialog({ customer, onCancel, onConfirm }) {
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(customer.custno)}
+            onClick={() => onConfirm(customer.custno, reason)}
             className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white"
           >
             Soft delete
@@ -294,11 +308,17 @@ function CustomersContent() {
   }
 
   async function handleEditCustomer(payload) {
-    const updated = await updateCustomer(payload.custno, {
-      custname: payload.custname,
-      address: payload.address,
-      payterm: payload.payterm,
-    });
+    const original = modal.customer || {};
+    const changed = [];
+    if (payload.custname !== original.custname) changed.push("custname");
+    if (payload.address !== original.address) changed.push("address");
+    if (payload.payterm !== original.payterm) changed.push("payterm");
+
+    const updated = await updateCustomer(
+      payload.custno,
+      { custname: payload.custname, address: payload.address, payterm: payload.payterm },
+      changed.join(","),
+    );
     setCustomers((items) =>
       items.map((item) =>
         item.custno === payload.custno ? { ...item, ...(updated || payload) } : item,
@@ -308,9 +328,9 @@ function CustomersContent() {
     setModal(null);
   }
 
-  async function handleSoftDelete(custNo) {
+  async function handleSoftDelete(custNo, reason) {
     try {
-      await softDeleteCustomer(custNo);
+      await softDeleteCustomer(custNo, reason);
       setCustomers((items) =>
         items.map((item) =>
           item.custno === custNo ? { ...item, record_status: "INACTIVE" } : item,

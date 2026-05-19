@@ -6,8 +6,12 @@ function requireSupabase() {
   }
 }
 
-function makeStamp(action) {
-  return `${action}:${new Date().toISOString()}`.slice(0, 60);
+function makeStamp(action, note = "") {
+  const base = `${action}:${new Date().toISOString()}`;
+  if (!note) return base.slice(0, 60);
+  const slot = 60 - base.length - 1;
+  if (slot <= 0) return base.slice(0, 60);
+  return `${base}|${note.trim().slice(0, slot)}`;
 }
 
 export async function getCustomers(userType = "USER") {
@@ -47,7 +51,7 @@ export async function addCustomer(customer) {
   return data;
 }
 
-export async function updateCustomer(custNo, updates) {
+export async function updateCustomer(custNo, updates, changedFields = "") {
   requireSupabase();
 
   const { data, error } = await supabase
@@ -55,7 +59,7 @@ export async function updateCustomer(custNo, updates) {
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
-      stamp: makeStamp("UPDATED"),
+      stamp: makeStamp("UPDATED", changedFields),
     })
     .eq("custno", custNo)
     .select()
@@ -65,7 +69,7 @@ export async function updateCustomer(custNo, updates) {
   return data;
 }
 
-export async function softDeleteCustomer(custNo) {
+export async function softDeleteCustomer(custNo, reason = "") {
   requireSupabase();
 
   const { data, error } = await supabase
@@ -73,7 +77,7 @@ export async function softDeleteCustomer(custNo) {
     .update({
       record_status: "INACTIVE",
       updated_at: new Date().toISOString(),
-      stamp: makeStamp("DEACTIVATED"),
+      stamp: makeStamp("DEACTIVATED", reason),
     })
     .eq("custno", custNo)
     .select()
