@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useRights } from "../hooks/useRights";
+import { useHeartbeat } from "../hooks/useHeartbeat";
 
 const navLinks = [
   { to: "/customers", label: "Customers" },
@@ -16,6 +17,7 @@ export function AppShell() {
   const { hasRight, userType } = useRights();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  useHeartbeat();
   const isAdminUser = userType === "ADMIN" || userType === "SUPERADMIN";
   const visibleNavLinks = navLinks.filter((link) => {
     if (link.to === "/customers") return isAdminUser || hasRight("CUST_VIEW");
@@ -73,7 +75,11 @@ export function AppShell() {
           <div
             className={`${isSidebarOpen ? "block" : "hidden"} space-y-2 px-4 lg:block lg:px-0`}
           >
-            {visibleNavLinks.map((link) => (
+            {visibleNavLinks.length === 0 ? (
+              <p className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                No pages available. Contact your administrator.
+              </p>
+            ) : visibleNavLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -97,7 +103,24 @@ export function AppShell() {
         </aside>
 
         <main className="flex-1 rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-sm lg:p-8">
-          <Outlet />
+          {visibleNavLinks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="rounded-full bg-amber-100 p-5">
+                <svg className="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </div>
+              <h2 className="mt-6 text-xl font-semibold text-slate-900">No permissions assigned</h2>
+              <p className="mt-2 max-w-sm text-sm text-slate-500">
+                Your account doesn't have access to any pages yet. Please wait for your administrator to grant you the necessary permissions, or reach out to them directly.
+              </p>
+              <p className="mt-6 rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+                Signed in as {currentUser?.email}
+              </p>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>

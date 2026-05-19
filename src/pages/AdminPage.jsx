@@ -16,6 +16,8 @@ import {
   updateAdminUser,
   updateUserRight,
   DISPLAY_RIGHTS,
+  RIGHTS,
+  ROLE_DEFAULT_RIGHTS,
 } from "../lib/admin-api";
 import { useRights } from "../hooks/useRights";
 import { useAuth } from "../hooks/useAuth";
@@ -105,7 +107,14 @@ function AdminContent() {
     try {
       const updated = await updateAdminUser(userId, updates);
       setUsers((items) =>
-        items.map((item) => (item.userId === userId ? { ...item, ...updated } : item)),
+        items.map((item) => {
+          if (item.userId !== userId) return item;
+          const roleDefaults = updates.user_type ? ROLE_DEFAULT_RIGHTS[updates.user_type] : null;
+          const newRights = roleDefaults
+            ? Object.fromEntries(Object.entries(roleDefaults).map(([k, v]) => [k, Boolean(v)]))
+            : item.rights;
+          return { ...item, ...updated, rights: newRights };
+        }),
       );
     } catch (err) {
       setError(err.message);
@@ -264,6 +273,23 @@ function StatCard({ label, value, note }) {
   );
 }
 
+const ONLINE_THRESHOLD_MS = 2 * 60 * 1000;
+
+function OnlineDot({ lastSeen }) {
+  const online = isOnline(lastSeen);
+  return (
+    <span
+      title={online ? "Online" : lastSeen ? `Last seen ${new Date(lastSeen).toLocaleTimeString()}` : "Never seen"}
+      className={`inline-block h-2.5 w-2.5 rounded-full flex-shrink-0 ${online ? "bg-emerald-500" : "bg-slate-300"}`}
+    />
+  );
+}
+
+function isOnline(lastSeen) {
+  if (!lastSeen) return false;
+  return Date.now() - new Date(lastSeen).getTime() < ONLINE_THRESHOLD_MS;
+}
+
 function UserAccessPanel({
   user,
   saving,
@@ -285,7 +311,10 @@ function UserAccessPanel({
       <div className="rounded-[1.5rem] border border-slate-100 p-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1">
-            <p className="font-semibold text-slate-900">{user.username || user.email}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-slate-900">{user.username || user.email}</p>
+              <OnlineDot lastSeen={user.last_seen} />
+            </div>
             <p className="mt-1 text-sm text-slate-500">{user.email}</p>
           </div>
           <span className="rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600">
@@ -304,12 +333,13 @@ function UserAccessPanel({
       className={`rounded-[1.5rem] border p-4 ${isSuperAdmin ? "border-amber-200 bg-amber-50/50" : isSelf ? "border-slate-200 bg-slate-50/50" : "border-slate-100"}`}
       title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : isSelf ? "You cannot modify your own account" : undefined}
     >
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_180px_180px] xl:items-center">
+      <div className={`grid gap-4 xl:items-center ${viewerType === "SUPERADMIN" ? "xl:grid-cols-[1.4fr_180px_180px]" : "xl:grid-cols-[1.4fr_180px]"}`}>
         <div>
           <div className="flex items-center gap-2">
             <p className="font-semibold text-slate-900">
               {user.username || user.email}
             </p>
+            <OnlineDot lastSeen={user.last_seen} />
             {isSuperAdmin && (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
                 Protected
@@ -317,26 +347,35 @@ function UserAccessPanel({
             )}
           </div>
           <p className="mt-1 text-sm text-slate-500">{user.email}</p>
+          <p className="mt-1 text-xs text-slate-400">{user.user_type}</p>
           {isSuperAdmin && (
             <p className="mt-1 text-xs text-amber-700">
               SUPERADMIN accounts cannot be modified
             </p>
           )}
         </div>
-        <select
-          value={user.user_type}
-          disabled={disabled}
-          onChange={(event) =>
-            onSaveUser(user.userId, { user_type: event.target.value })
-          }
-          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {availableTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        {viewerType === "SUPERADMIN" && (
+          <select
+            value={user.user_type}
+            disabled={disabled}
+            onChange={(event) =>
+              onSaveUser(user.userId, { user_type: event.target.value })
+            }
+            className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {availableTypes.map((type) => (
+              <option
+                key={type}
+                value={type}
+                disabled={type === "SUPERADMIN" && user.record_status !== "ACTIVE"}
+              >
+                {type === "SUPERADMIN" && user.record_status !== "ACTIVE"
+                  ? "SUPERADMIN (activate first)"
+                  : type}
+              </option>
+            ))}
+          </select>
+        )}
         <select
           value={user.record_status}
           disabled={disabled}

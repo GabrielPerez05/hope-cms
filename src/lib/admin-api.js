@@ -59,8 +59,33 @@ export async function getAdminUsers() {
   });
 }
 
+const USER_VIEW_RIGHTS = new Set(["CUST_VIEW", "SALES_VIEW", "SD_VIEW", "PROD_VIEW", "PRICE_VIEW"]);
+
+const ROLE_DEFAULT_RIGHTS = {
+  USER:       Object.fromEntries(RIGHTS.map((r) => [r, USER_VIEW_RIGHTS.has(r) ? 1 : 0])),
+  ADMIN:      Object.fromEntries(RIGHTS.map((r) => [r, r === "CUST_DEL" ? 0 : 1])),
+  SUPERADMIN: Object.fromEntries(RIGHTS.map((r) => [r, 1])),
+};
+
+export { ROLE_DEFAULT_RIGHTS };
+
 export async function updateAdminUser(userId, updates) {
   requireSupabase();
+
+  // Update rights BEFORE changing user_type — once the user becomes SUPERADMIN,
+  // RLS blocks further writes to their user_rights rows.
+  if (updates.user_type && ROLE_DEFAULT_RIGHTS[updates.user_type]) {
+    const defaults = ROLE_DEFAULT_RIGHTS[updates.user_type];
+    const rightsRows = RIGHTS.map((rightName) => ({
+      userId,
+      right_name: rightName,
+      right_value: defaults[rightName],
+    }));
+    const { error: rightsError } = await supabase
+      .from("user_rights")
+      .upsert(rightsRows, { onConflict: "userId,right_name" });
+    if (rightsError) throw rightsError;
+  }
 
   const { data, error } = await supabase
     .from("user")
@@ -107,5 +132,19 @@ export async function updateUserRight(userId, rightName, isEnabled) {
 // by userType === "SUPERADMIN" in code — the checkbox has no functional effect
 // for any non-SUPERADMIN account, and SUPERADMIN rows are protected anyway.
 const DISPLAY_RIGHTS = RIGHTS.filter((r) => r !== "CUST_DEL");
+
+export async function updateLastSeen() {
+  if (!supabase) return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase
+      .from("user")
+      .update({ last_seen: new Date().toISOString() })
+      .eq("userId", session.user.id);
+  } catch {
+    // silently ignore — heartbeat failure should never crash the app
+  }
+}
 
 export { MODULES, RIGHTS, DISPLAY_RIGHTS };
