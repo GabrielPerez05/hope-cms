@@ -18,13 +18,13 @@ import {
   activateUser,
   deactivateUser,
   DISPLAY_RIGHTS,
-  RIGHTS,
   ROLE_DEFAULT_RIGHTS,
 } from "../lib/admin-api";
 import { useRights } from "../hooks/useRights";
 import { useAuth } from "../hooks/useAuth";
 
 const USER_TYPES = ["USER", "ADMIN", "SUPERADMIN"];
+const STATUSES = ["ACTIVE", "INACTIVE"];
 
 export function AdminPage() {
   return (
