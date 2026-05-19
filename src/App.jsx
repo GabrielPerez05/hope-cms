@@ -13,6 +13,9 @@ import { SalesPage } from "./pages/SalesPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { DeletedCustomersPage } from "./pages/DeletedCustomersPage";
+import { CustomerSalesSummaryPage } from "./pages/CustomerSalesSummaryPage";
+import { TopCustomersPage } from "./pages/TopCustomersPage";
+import { ProductRevenuePage } from "./pages/ProductRevenuePage";
 import "./index.css";
 
 export function AdminOnlyRoute({ children }) {
@@ -53,6 +56,9 @@ function App() {
                   </AdminOnlyRoute>
                 }
               />
+              <Route path="reports/customer-summary" element={<CustomerSalesSummaryPage />} />
+              <Route path="reports/top-customers" element={<TopCustomersPage />} />
+              <Route path="reports/product-revenue" element={<ProductRevenuePage />} />
             </Route>
           </Route>
 

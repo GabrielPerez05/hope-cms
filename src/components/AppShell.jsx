@@ -8,6 +8,9 @@ const navLinks = [
   { to: "/customers", label: "Customers" },
   { to: "/sales", label: "Sales" },
   { to: "/products", label: "Products" },
+  { to: "/reports/customer-summary", label: "Customer Summary", right: "PRICE_VIEW" },
+  { to: "/reports/top-customers", label: "Top Customers", right: "PRICE_VIEW" },
+  { to: "/reports/product-revenue", label: "Product Revenue", right: "PRICE_VIEW" },
   { to: "/admin", label: "Admin" },
   { to: "/deleted-customers", label: "Deleted Customers" },
 ];
@@ -23,6 +26,7 @@ export function AppShell() {
     if (link.to === "/customers") return isAdminUser || hasRight("CUST_VIEW");
     if (link.to === "/sales") return isAdminUser || hasRight("SALES_VIEW");
     if (link.to === "/products") return isAdminUser || hasRight("PROD_VIEW");
+    if (link.right) return isAdminUser || hasRight(link.right);
     if (link.to === "/admin") return isAdminUser || hasRight("ADM_USER");
     if (link.to === "/deleted-customers") return isAdminUser;
     return true;
@@ -85,7 +89,7 @@ export function AppShell() {
                 to={link.to}
                 onClick={() => setIsSidebarOpen(false)}
                 className={`block rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                  location.pathname === link.to
+                  location.pathname === link.to || location.pathname.startsWith(link.to + "/")
                     ? "bg-emerald-700 text-white"
                     : "text-emerald-700 hover:bg-emerald-50"
                 }`}
