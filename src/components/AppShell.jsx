@@ -46,6 +46,11 @@ export function AppShell() {
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-700">
             <span className="rounded-full bg-emerald-100 px-3 py-2 font-medium text-emerald-800">
               {currentUser?.username || currentUser?.email || "Signed in"}
+              {userType && (
+                <span className="ml-2 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white">
+                  {userType}
+                </span>
+              )}
             </span>
             <button
               onClick={signOut}

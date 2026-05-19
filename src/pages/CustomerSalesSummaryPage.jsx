@@ -9,9 +9,9 @@ import { getPageItems, clampPage } from "../lib/pagination";
 const PAGE_SIZE = 10;
 
 function formatCurrency(val) {
-  return Number(val || 0).toLocaleString("en-PH", {
+  return Number(val || 0).toLocaleString("en-US", {
     style: "currency",
-    currency: "PHP",
+    currency: "USD",
   });
 }
 

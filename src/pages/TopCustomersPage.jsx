@@ -4,9 +4,9 @@ import { getTopCustomers } from "../lib/reports-api";
 import { DataLoadingState, DataErrorState } from "../components/DataStates";
 
 function formatCurrency(val) {
-  return Number(val || 0).toLocaleString("en-PH", {
+  return Number(val || 0).toLocaleString("en-US", {
     style: "currency",
-    currency: "PHP",
+    currency: "USD",
   });
 }
 
