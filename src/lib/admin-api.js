@@ -72,18 +72,13 @@ export { ROLE_DEFAULT_RIGHTS };
 export async function updateAdminUser(userId, updates) {
   requireSupabase();
 
-  // Update rights BEFORE changing user_type — once the user becomes SUPERADMIN,
-  // RLS blocks further writes to their user_rights rows.
+  // set_role_rights is a SECURITY DEFINER function that bypasses the RLS policy
+  // blocking direct writes to user_rights rows when the target is/becomes SUPERADMIN.
   if (updates.user_type && ROLE_DEFAULT_RIGHTS[updates.user_type]) {
-    const defaults = ROLE_DEFAULT_RIGHTS[updates.user_type];
-    const rightsRows = RIGHTS.map((rightName) => ({
-      userId,
-      right_name: rightName,
-      right_value: defaults[rightName],
-    }));
-    const { error: rightsError } = await supabase
-      .from("user_rights")
-      .upsert(rightsRows, { onConflict: "userId,right_name" });
+    const { error: rightsError } = await supabase.rpc("set_role_rights", {
+      target_user_id: userId,
+      new_role: updates.user_type,
+    });
     if (rightsError) throw rightsError;
   }
 
