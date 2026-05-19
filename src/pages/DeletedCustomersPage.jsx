@@ -14,6 +14,7 @@ import {
 } from "../lib/pagination";
 import { useRights } from "../contexts/user-rights-context";
 import { getCustomers, recoverCustomer } from "../lib/customer-api";
+import { useToast, ToastContainer } from "../components/Toast";
 
 function formatStamp(customer) {
   const raw = customer.stamp || customer.updated_at || customer.created_at || customer.date_updated;
@@ -56,6 +57,7 @@ export function DeletedCustomersPage() {
 
 function DeletedCustomersContent() {
   const { userType } = useRights();
+  const { toasts, success: toastSuccess, error: toastError } = useToast();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -100,8 +102,9 @@ function DeletedCustomersContent() {
     try {
       await recoverCustomer(custNo);
       setCustomers((items) => items.filter((customer) => customer.custno !== custNo));
+      toastSuccess("Customer recovered.");
     } catch (err) {
-      setError(err.message);
+      toastError(err.message);
     }
   }
 
@@ -173,6 +176,7 @@ function DeletedCustomersContent() {
           </div>
         )}
       </div>
+      <ToastContainer toasts={toasts} />
     </section>
   );
 }

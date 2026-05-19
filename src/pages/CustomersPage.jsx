@@ -20,6 +20,7 @@ import {
   softDeleteCustomer,
   updateCustomer,
 } from "../lib/customer-api";
+import { useToast, ToastContainer } from "../components/Toast";
 
 const PAY_TERMS = ["COD", "30D", "45D"];
 
@@ -218,6 +219,7 @@ export function CustomersPage() {
 function CustomersContent() {
   const { currentUser } = useAuth();
   const { hasRight, userType } = useRights();
+  const { toasts, success: toastSuccess, error: toastError } = useToast();
   const [customers, setCustomers] = useState([]);
   const [query, setQuery] = useState("");
   const [payTerm, setPayTerm] = useState("ALL");
@@ -287,6 +289,7 @@ function CustomersContent() {
   async function handleAddCustomer(payload) {
     const created = await addCustomer(payload);
     setCustomers((items) => [created || payload, ...items]);
+    toastSuccess("Customer added.");
     setModal(null);
   }
 
@@ -301,6 +304,7 @@ function CustomersContent() {
         item.custno === payload.custno ? { ...item, ...(updated || payload) } : item,
       ),
     );
+    toastSuccess("Customer updated.");
     setModal(null);
   }
 
@@ -312,9 +316,10 @@ function CustomersContent() {
           item.custno === custNo ? { ...item, record_status: "INACTIVE" } : item,
         ),
       );
+      toastSuccess("Customer deleted.");
       setModal(null);
     } catch (err) {
-      setError(err.message);
+      toastError(err.message);
     }
   }
 
@@ -482,6 +487,8 @@ function CustomersContent() {
           onConfirm={handleSoftDelete}
         />
       ) : null}
+
+      <ToastContainer toasts={toasts} />
     </section>
   );
 }
