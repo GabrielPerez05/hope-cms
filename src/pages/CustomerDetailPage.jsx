@@ -174,8 +174,11 @@ function CustomerDetailContent() {
       <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
         <Link
           to="/customers"
-          className="text-sm font-semibold text-emerald-700 underline-offset-4 hover:underline"
+          className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-700 hover:text-white"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
           Back to customers
         </Link>
         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_280px]">
@@ -201,6 +204,37 @@ function CustomerDetailContent() {
       </div>
 
       <div className="rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Sales Summary</h2>
+        <p className="mt-1 text-sm text-slate-500">Quick metrics for this customer.</p>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="rounded-[1.5rem] bg-emerald-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-600">Transactions</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">{sales.length}</p>
+          </div>
+          <div className="rounded-[1.5rem] bg-emerald-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-600">Most Recent Sale</p>
+            <p className="mt-2 text-xl font-semibold text-slate-900">
+              {sales.length > 0
+                ? new Date(
+                    Math.max(...sales.map((s) => new Date(getSalesDate(s)).getTime()))
+                  ).toLocaleDateString()
+                : "—"}
+            </p>
+          </div>
+          <div className="rounded-[1.5rem] bg-emerald-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-600">First Sale</p>
+            <p className="mt-2 text-xl font-semibold text-slate-900">
+              {sales.length > 0
+                ? new Date(
+                    Math.min(...sales.map((s) => new Date(getSalesDate(s)).getTime()))
+                  ).toLocaleDateString()
+                : "—"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Sales history</h2>
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -209,6 +243,7 @@ function CustomerDetailContent() {
                 <th className="px-4 py-3">Trans No</th>
                 <th className="px-4 py-3">Sales Date</th>
                 <th className="px-4 py-3">Emp No</th>
+                {canViewDetail ? <th className="w-10 px-4 py-3"></th> : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -216,7 +251,7 @@ function CustomerDetailContent() {
                 <tr
                   key={getTransNo(sale)}
                   onClick={canViewDetail ? () => openTransaction(getTransNo(sale)) : undefined}
-                  className={canViewDetail ? "cursor-pointer hover:bg-emerald-50/50" : ""}
+                  className={canViewDetail ? "cursor-pointer transition hover:bg-emerald-50 hover:shadow-[inset_3px_0_0_0] hover:shadow-emerald-400" : ""}
                 >
                   <td className="px-4 py-4 font-medium text-emerald-700">
                     {getTransNo(sale)}
@@ -227,6 +262,13 @@ function CustomerDetailContent() {
                   <td className="px-4 py-4 text-slate-600">
                     {getEmpNo(sale)}
                   </td>
+                  {canViewDetail ? (
+                    <td className="w-10 px-4 py-4 text-slate-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

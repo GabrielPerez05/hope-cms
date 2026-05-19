@@ -46,6 +46,7 @@ function ProductCatalogueContent() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
@@ -92,9 +93,19 @@ function ProductCatalogueContent() {
   if (loading) return <DataLoadingState label="Loading product catalogue..." />;
   if (error) return <DataErrorState message={error} />;
 
-  const totalPages = Math.ceil(products.length / pageSize);
+  const filteredProducts = products.filter((p) => {
+    const q = query.toLowerCase();
+    return (
+      !q ||
+      getProdCode(p)?.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q) ||
+      p.unit?.toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
   const currentPage = clampPage(page, totalPages);
-  const pagedProducts = getPageItems(products, currentPage, pageSize);
+  const pagedProducts = getPageItems(filteredProducts, currentPage, pageSize);
 
   return (
     <section className="space-y-8">
@@ -105,7 +116,15 @@ function ProductCatalogueContent() {
         <p className="mt-2 max-w-2xl text-sm text-slate-600">
           Read-only catalogue with current prices from the latest price history.
         </p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6">
+          <input
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+            placeholder="Search by code, description, or unit…"
+            className="w-full rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
+          />
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Total products" value={stats.total} note="In catalogue" />
           {canViewPrice && <StatCard label="Highest price" value={`$${stats.highest.toFixed(2)}`} note="Most expensive" />}
           {canViewPrice && <StatCard label="Lowest price" value={`$${stats.lowest.toFixed(2)}`} note="Least expensive" />}
@@ -147,7 +166,7 @@ function ProductCatalogueContent() {
         <Pagination
           page={currentPage}
           pageSize={pageSize}
-          total={products.length}
+          total={filteredProducts.length}
           onPageChange={setPage}
           onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         />

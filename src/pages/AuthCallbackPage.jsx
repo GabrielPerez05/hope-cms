@@ -5,6 +5,7 @@ import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export function AuthCallbackPage() {
   const [status, setStatus] = useState("loading");
+  const [isNewAccount, setIsNewAccount] = useState(false);
   const hasHandledCallback = useRef(false);
   const { loadSession } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +49,9 @@ export function AuthCallbackPage() {
       if (!sessionResult?.ok) {
         const errorMessage = sessionResult?.error || "Your account could not be activated.";
         if (errorMessage.includes("pending activation")) {
+          const createdAt = new Date(session.user.created_at).getTime();
+          const ageMs = Date.now() - createdAt;
+          setIsNewAccount(ageMs < 2 * 60 * 1000);
           setStatus("pending");
         } else {
           navigate(`/login?error=${encodeURIComponent(errorMessage)}`, { replace: true });
@@ -72,9 +76,13 @@ export function AuthCallbackPage() {
               </svg>
             </div>
             <div>
-              <p className="text-xl font-semibold text-slate-900">Account created</p>
+              <p className="text-xl font-semibold text-slate-900">
+                {isNewAccount ? "Account created" : "Account not yet activated"}
+              </p>
               <p className="mt-2 text-sm text-slate-600">
-                Your account has been registered and is pending activation.
+                {isNewAccount
+                  ? "Your account has been registered and is pending activation."
+                  : "Your account exists but hasn't been activated yet."}
               </p>
             </div>
           </div>
@@ -82,8 +90,9 @@ export function AuthCallbackPage() {
           <div className="mt-6 rounded-[1.75rem] bg-emerald-50 p-5 text-sm text-slate-700">
             <p className="font-semibold text-emerald-700">What happens next?</p>
             <p className="mt-2 leading-6 text-slate-600">
-              A Sales Manager or Admin will review and activate your account.
-              Once activated, you can sign in using the same Google account.
+              {isNewAccount
+                ? "A Sales Manager or Admin will review and activate your account. Once activated, you can sign in using the same Google account."
+                : "Contact your Sales Manager or Admin to activate your account. Once activated, you can sign in using the same Google account."}
             </p>
           </div>
 
