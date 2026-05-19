@@ -15,6 +15,8 @@ import {
   getAdminUsers,
   updateAdminUser,
   updateUserRight,
+  activateUser,
+  deactivateUser,
   DISPLAY_RIGHTS,
   RIGHTS,
   ROLE_DEFAULT_RIGHTS,
@@ -23,7 +25,6 @@ import { useRights } from "../hooks/useRights";
 import { useAuth } from "../hooks/useAuth";
 
 const USER_TYPES = ["USER", "ADMIN", "SUPERADMIN"];
-const STATUSES = ["ACTIVE", "INACTIVE"];
 
 export function AdminPage() {
   return (
@@ -115,6 +116,40 @@ function AdminContent() {
             : item.rights;
           return { ...item, ...updated, rights: newRights };
         }),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving("");
+    }
+  }
+
+  async function handleActivate(userId) {
+    setSaving(userId);
+    setError(null);
+    try {
+      await activateUser(userId);
+      setUsers((items) =>
+        items.map((item) =>
+          item.userId === userId ? { ...item, record_status: "ACTIVE" } : item,
+        ),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving("");
+    }
+  }
+
+  async function handleDeactivate(userId) {
+    setSaving(userId);
+    setError(null);
+    try {
+      await deactivateUser(userId);
+      setUsers((items) =>
+        items.map((item) =>
+          item.userId === userId ? { ...item, record_status: "INACTIVE" } : item,
+        ),
       );
     } catch (err) {
       setError(err.message);
@@ -247,6 +282,8 @@ function AdminContent() {
                 viewerType={userType}
                 viewerId={currentUser?.id}
                 onSaveUser={saveUser}
+                onActivate={handleActivate}
+                onDeactivate={handleDeactivate}
                 onToggleRight={toggleRight}
               />
             ))}
@@ -297,6 +334,8 @@ function UserAccessPanel({
   viewerType,
   viewerId,
   onSaveUser,
+  onActivate,
+  onDeactivate,
   onToggleRight,
 }) {
   const isSuperAdmin = user.user_type === "SUPERADMIN";
@@ -376,20 +415,27 @@ function UserAccessPanel({
             ))}
           </select>
         )}
-        <select
-          value={user.record_status}
-          disabled={disabled}
-          onChange={(event) =>
-            onSaveUser(user.userId, { record_status: event.target.value })
-          }
-          className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+        <div
+          className="flex gap-2"
+          title={isSuperAdmin ? "SUPERADMIN accounts cannot be modified" : undefined}
         >
-          {STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+          <button
+            type="button"
+            disabled={disabled || user.record_status === "ACTIVE"}
+            onClick={() => onActivate(user.userId)}
+            className="flex-1 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Activate
+          </button>
+          <button
+            type="button"
+            disabled={disabled || user.record_status === "INACTIVE"}
+            onClick={() => onDeactivate(user.userId)}
+            className="flex-1 rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Deactivate
+          </button>
+        </div>
       </div>
 
       {viewerType === "SUPERADMIN" && (
