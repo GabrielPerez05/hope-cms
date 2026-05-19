@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   DataErrorBoundary,
   DataErrorState,
@@ -17,6 +17,8 @@ import { useRights } from "../contexts/user-rights-context";
 import {
   addCustomer,
   getCustomers,
+  recoverCustomer,
+  revertCustomer,
   softDeleteCustomer,
   updateCustomer,
 } from "../lib/customer-api";
@@ -37,9 +39,11 @@ function formatStamp(customer) {
 
   if (/^[A-Z]+$/.test(possibleAction)) {
     const rest = raw.slice(colonIdx + 1);
-    const pipeIdx = rest.indexOf("|");
-    const dateStr = pipeIdx > 0 ? rest.slice(0, pipeIdx) : rest;
-    const note = pipeIdx > 0 ? rest.slice(pipeIdx + 1) : "";
+    const parts = rest.split("|");
+    const dateStr = parts[0];
+    const byPart = parts.find((p) => p.startsWith("by:"));
+    const noteParts = parts.slice(1).filter((p) => !p.startsWith("by:"));
+    const note = noteParts.join(", ");
     const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {
       const label = possibleAction.charAt(0) + possibleAction.slice(1).toLowerCase();
@@ -47,7 +51,9 @@ function formatStamp(customer) {
         month: "short", day: "numeric", year: "numeric",
         hour: "numeric", minute: "2-digit", hour12: true,
       });
-      return note ? `${label} · ${formatted} — ${note}` : `${label} · ${formatted}`;
+      let result = note ? `${label} · ${formatted} — ${note}` : `${label} · ${formatted}`;
+      if (byPart) result += ` · ${byPart.slice(3)}`;
+      return result;
     }
   }
 
@@ -233,6 +239,7 @@ export function CustomersPage() {
 function CustomersContent() {
   const { currentUser } = useAuth();
   const { hasRight, userType } = useRights();
+  const navigate = useNavigate();
   const { toasts, success: toastSuccess, error: toastError } = useToast();
   const [customers, setCustomers] = useState([]);
   const [query, setQuery] = useState("");
@@ -301,7 +308,7 @@ function CustomersContent() {
   const pagedCustomers = getPageItems(filteredCustomers, currentPage, pageSize);
 
   async function handleAddCustomer(payload) {
-    const created = await addCustomer(payload);
+    const created = await addCustomer(payload, currentUser);
     setCustomers((items) => [created || payload, ...items]);
     toastSuccess("Customer added.");
     setModal(null);
@@ -314,10 +321,18 @@ function CustomersContent() {
     if (payload.address !== original.address) changed.push("address");
     if (payload.payterm !== original.payterm) changed.push("payterm");
 
+    const prevSnapshot = {
+      custname: original.custname,
+      address: original.address,
+      payterm: original.payterm,
+    };
+
     const updated = await updateCustomer(
       payload.custno,
       { custname: payload.custname, address: payload.address, payterm: payload.payterm },
       changed.join(","),
+      currentUser,
+      prevSnapshot,
     );
     setCustomers((items) =>
       items.map((item) =>
@@ -330,7 +345,7 @@ function CustomersContent() {
 
   async function handleSoftDelete(custNo, reason) {
     try {
-      await softDeleteCustomer(custNo, reason);
+      await softDeleteCustomer(custNo, reason, currentUser);
       setCustomers((items) =>
         items.map((item) =>
           item.custno === custNo ? { ...item, record_status: "INACTIVE" } : item,
@@ -338,6 +353,37 @@ function CustomersContent() {
       );
       toastSuccess("Customer deleted.");
       setModal(null);
+    } catch (err) {
+      toastError(err.message);
+    }
+  }
+
+  async function handleRecover(custNo) {
+    try {
+      await recoverCustomer(custNo, currentUser);
+      setCustomers((items) =>
+        items.map((item) =>
+          item.custno === custNo ? { ...item, record_status: "ACTIVE" } : item,
+        ),
+      );
+      toastSuccess("Customer recovered.");
+    } catch (err) {
+      toastError(err.message);
+    }
+  }
+
+  async function handleRevert(customer) {
+    try {
+      const snapshot = typeof customer.prev_snapshot === "string"
+        ? JSON.parse(customer.prev_snapshot)
+        : customer.prev_snapshot;
+      const updated = await revertCustomer(customer.custno, snapshot, currentUser);
+      setCustomers((items) =>
+        items.map((item) =>
+          item.custno === customer.custno ? { ...item, ...(updated || snapshot), prev_snapshot: null } : item,
+        ),
+      );
+      toastSuccess("Customer reverted to previous state.");
     } catch (err) {
       toastError(err.message);
     }
@@ -415,20 +461,20 @@ function CustomersContent() {
                 {showActionsColumn ? (
                   <th className="px-4 py-3">Actions</th>
                 ) : null}
+                <th className="w-10 px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 border-t border-slate-100">
               {pagedCustomers.map((customer) => (
-                <tr key={customer.custno} className="hover:bg-emerald-50/50">
-                  <td className="px-4 py-4 font-medium text-slate-900">
-                    <Link
-                      to={`/customers/${customer.custno}`}
-                      className="text-emerald-700 underline-offset-4 hover:underline"
-                    >
-                      {customer.custno}
-                    </Link>
+                <tr
+                  key={customer.custno}
+                  onClick={() => navigate(`/customers/${customer.custno}`)}
+                  className="cursor-pointer transition hover:bg-emerald-50 hover:shadow-[inset_3px_0_0_0] hover:shadow-emerald-400"
+                >
+                  <td className="px-4 py-4 font-medium text-emerald-700">
+                    {customer.custno}
                   </td>
-                  <td className="px-4 py-4 text-slate-700">
+                  <td className="px-4 py-4 font-medium text-slate-900">
                     {customer.custname}
                   </td>
                   <td className="max-w-sm px-4 py-4 text-slate-600">
@@ -446,7 +492,7 @@ function CustomersContent() {
                     </td>
                   ) : null}
                   {showActionsColumn ? (
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap gap-2">
                         {canEdit ? (
                           <button
@@ -478,9 +524,42 @@ function CustomersContent() {
                             <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-lg bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100">Delete</span>
                           </button>
                         ) : null}
+                        {userType === "SUPERADMIN" && customer.prev_snapshot ? (
+                          <button
+                            type="button"
+                            onClick={() => handleRevert(customer)}
+                            title="Revert last edit"
+                            className="group relative rounded-xl bg-amber-50 p-2 text-amber-600 transition hover:bg-amber-100 hover:text-amber-800"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M9 14L4 9l5-5" />
+                              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+                            </svg>
+                            <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-lg bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100">Revert edit</span>
+                          </button>
+                        ) : null}
+                        {canSoftDelete && getStatus(customer) === "INACTIVE" ? (
+                          <button
+                            type="button"
+                            onClick={() => handleRecover(customer.custno)}
+                            title="Recover"
+                            className="group relative rounded-xl bg-emerald-50 p-2 text-emerald-600 transition hover:bg-emerald-100 hover:text-emerald-800"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                              <path d="M3 3v5h5" />
+                            </svg>
+                            <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-lg bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100">Recover</span>
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   ) : null}
+                  <td className="w-10 px-4 py-4 text-slate-300 group-hover:text-emerald-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -12,6 +12,7 @@ import {
   clampPage,
   getPageItems,
 } from "../lib/pagination";
+import { useAuth } from "../hooks/useAuth";
 import { useRights } from "../contexts/user-rights-context";
 import { getCustomers, recoverCustomer } from "../lib/customer-api";
 import { useToast, ToastContainer } from "../components/Toast";
@@ -24,7 +25,12 @@ function formatStamp(customer) {
   const possibleAction = colonIdx > 0 ? raw.slice(0, colonIdx) : "";
 
   if (/^[A-Z]+$/.test(possibleAction)) {
-    const dateStr = raw.slice(colonIdx + 1);
+    const rest = raw.slice(colonIdx + 1);
+    const parts = rest.split("|");
+    const dateStr = parts[0];
+    const byPart = parts.find((p) => p.startsWith("by:"));
+    const noteParts = parts.slice(1).filter((p) => !p.startsWith("by:"));
+    const note = noteParts.join(", ");
     const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {
       const label = possibleAction.charAt(0) + possibleAction.slice(1).toLowerCase();
@@ -32,7 +38,9 @@ function formatStamp(customer) {
         month: "short", day: "numeric", year: "numeric",
         hour: "numeric", minute: "2-digit", hour12: true,
       });
-      return `${label} · ${formatted}`;
+      let result = note ? `${label} · ${formatted} — ${note}` : `${label} · ${formatted}`;
+      if (byPart) result += ` · ${byPart.slice(3)}`;
+      return result;
     }
   }
 
@@ -56,6 +64,7 @@ export function DeletedCustomersPage() {
 }
 
 function DeletedCustomersContent() {
+  const { currentUser } = useAuth();
   const { userType } = useRights();
   const { toasts, success: toastSuccess, error: toastError } = useToast();
   const [customers, setCustomers] = useState([]);
@@ -100,7 +109,7 @@ function DeletedCustomersContent() {
   async function handleRecover(custNo) {
     setError(null);
     try {
-      await recoverCustomer(custNo);
+      await recoverCustomer(custNo, currentUser);
       setCustomers((items) => items.filter((customer) => customer.custno !== custNo));
       toastSuccess("Customer recovered.");
     } catch (err) {
