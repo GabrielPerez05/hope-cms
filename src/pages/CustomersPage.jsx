@@ -226,8 +226,9 @@ function CustomersContent() {
   const [modal, setModal] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const canAdd = hasRight("CUST_ADD");
-  const canEdit = hasRight("CUST_EDIT");
+  const isAdminUser = userType === "ADMIN" || userType === "SUPERADMIN";
+  const canAdd = isAdminUser || hasRight("CUST_ADD");
+  const canEdit = isAdminUser || hasRight("CUST_EDIT");
   const canSoftDelete = userType === "SUPERADMIN" && hasRight("CUST_DEL");
   const showActionsColumn = canEdit || canSoftDelete;
   const showStamp = userType === "ADMIN" || userType === "SUPERADMIN";
