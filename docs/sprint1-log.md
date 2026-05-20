@@ -19,3 +19,25 @@ Project scaffold, Supabase setup files, authentication shell, routing, database 
 - Create the Supabase project and paste live values into `.env`.
 - Configure Google OAuth in Google Cloud and Supabase.
 - Protect `main` and `dev` branches in GitHub settings.
+
+## Member Contributions
+
+| Member | Role | Sprint 1 Deliverable |
+|--------|------|----------------------|
+| M1 Gabriel Red Ray Perez | Supabase & API | Supabase client singleton, customer-api skeleton |
+| M2 Timothy John Gandeza | UI Pages | LoginPage, RegisterPage, AppShell layout |
+| M3 Lars Ulrich Galamiton | Database | initial_schema.sql, rights_seed.sql migrations |
+| M4 Rhyian Joshua Ticbobolan | Auth Context | AuthContext with session lifecycle and login guard |
+| M5 Clark Kent Zuñiga | Tests | sprint1-auth-flows.test.jsx (8 test cases) |
+
+## Test Results
+
+All 8 Sprint 1 test cases pass:
+- Google OAuth PKCE flow initiation
+- Email verification signup flow
+- Active session persistence through AuthProvider
+- Inactive login guard (signs out + surfaces error)
+- OAuth callback code exchange → /customers redirect
+- Inactive OAuth callback → /login?error= redirect
+- Unauthenticated route protection
+- Rights context loading on session
