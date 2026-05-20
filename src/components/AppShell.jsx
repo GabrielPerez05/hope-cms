@@ -66,9 +66,9 @@ export function AppShell() {
       <div className="border-b border-emerald-200 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-lg font-semibold text-slate-900">Hope CMS</p>
+            <p className="text-lg font-semibold text-slate-900">Customer Management System</p>
             <p className="text-sm text-emerald-600">
-              A polished emerald workspace for customer and sales management.
+              Hope, INC. — Customer Management System
             </p>
           </div>
 
