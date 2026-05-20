@@ -302,6 +302,7 @@ function CustomersContent() {
         userType === "USER" ? getStatus(customer) === "ACTIVE" : true;
       const queryVisible =
         !query.trim() ||
+        customer.custno?.toLowerCase().includes(query.toLowerCase()) ||
         customer.custname?.toLowerCase().includes(query.toLowerCase()) ||
         customer.payterm?.toLowerCase().includes(query.toLowerCase());
       const payTermVisible = payTerm === "ALL" || customer.payterm === payTerm;
@@ -425,7 +426,7 @@ function CustomersContent() {
               setQuery(event.target.value);
               setPage(1);
             }}
-            placeholder="Search by name or pay term"
+            placeholder="Search by customer no, name, or pay term"
             className="rounded-2xl border border-emerald-100 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
           />
           <select
