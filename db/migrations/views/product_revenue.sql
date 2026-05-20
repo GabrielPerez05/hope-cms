@@ -4,6 +4,7 @@
 -- salesDetail rows. Revenue = SUM(quantity × unitPrice) using each product's
 -- latest priceHist entry, resolved via a MAX(effdate) CTE subquery.
 -- Used by the ProductRevenuePage report in Sprint 3.
+-- Run after: initial_schema.sql, rights_seed.sql
 
 CREATE OR REPLACE VIEW product_revenue AS
 WITH current_price AS (
