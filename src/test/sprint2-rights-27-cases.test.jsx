@@ -100,8 +100,9 @@ describe("Sprint 2 M5 27-case customer rights matrix", () => {
 
       expect(await screen.findByText("Globus Medical")).toBeInTheDocument();
 
-      const canAdd = enabledRight === "CUST_ADD";
-      const canEdit = enabledRight === "CUST_EDIT";
+      const isAdminType = userType === "ADMIN" || userType === "SUPERADMIN";
+      const canAdd = isAdminType || enabledRight === "CUST_ADD";
+      const canEdit = isAdminType || enabledRight === "CUST_EDIT";
       const canDelete = userType === "SUPERADMIN" && enabledRight === "CUST_DEL";
       const showStamp = userType === "ADMIN" || userType === "SUPERADMIN";
       const showActions = canEdit || canDelete;

@@ -251,7 +251,7 @@ describe("Sprint 1 callback and route protection", () => {
     mocks.exchangeCodeForSession.mockResolvedValue({
       data: {
         session: {
-          user: { id: "inactive-oauth-user", email: "inactive-oauth@test.com" },
+          user: { id: "inactive-oauth-user", email: "inactive-oauth@test.com", created_at: new Date(Date.now() - 60_000).toISOString() },
         },
       },
       error: null,
@@ -262,11 +262,8 @@ describe("Sprint 1 callback and route protection", () => {
 
     await waitFor(() => {
       expect(mocks.signOut).toHaveBeenCalled();
-      expect(mocks.navigate).toHaveBeenCalledWith(
-        expect.stringContaining("/login?error="),
-        { replace: true },
-      );
     });
+    expect(await screen.findByText(/not yet activated|pending activation/i)).toBeInTheDocument();
   });
 
   it("redirects unauthenticated users away from protected routes", async () => {
