@@ -1,4 +1,10 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+﻿// Author: M4 Rhyian Joshua Ticbobolan
+// AuthContext — wraps the entire app and owns the Supabase session lifecycle.
+// On every SIGNED_IN event it calls fetchAppUser() to load the public."user" row,
+// then runs the LOGIN GUARD: INACTIVE or missing profiles are immediately signed
+// out and surface an error message. Provides signIn, signUp, signInWithGoogle,
+// signOut, and loadSession to consumers via useAuth().
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { AuthContext } from "./auth-context";
 

@@ -1,3 +1,10 @@
+// Author: M2 Timothy John Gandeza
+// AdminPage — user management panel for ADMIN and SUPERADMIN.
+// SUPERADMIN rows render with a "Protected" badge and all controls are disabled.
+// ADMIN users cannot modify peer ADMIN or SUPERADMIN accounts (isAdminViewingPeer guard).
+// The rights dropdown is SUPERADMIN-only and excludes CUST_DEL.
+// Activate/Deactivate re-check user_type server-side before writing, providing a
+// second guard layer on top of the RLS SUPERADMIN protection policy.
 import { useEffect, useMemo, useState } from "react";
 import {
   DataErrorBoundary,

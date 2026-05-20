@@ -1,3 +1,10 @@
+// Author: M1 Gabriel Red Ray Perez
+// customer-api.js — all write operations for the customer table.
+// Soft-delete only: record_status is set to 'INACTIVE'; the SQL DELETE keyword
+// is never used anywhere in this file. Every mutation writes a structured stamp
+// (ACTION:ISO_TIMESTAMP|note|by:name(TYPE)) for ADMIN/SUPERADMIN audit visibility.
+// getCustomers() client-filters INACTIVE rows for USER type as a second defense
+// layer after RLS — both must agree for a row to be visible.
 import { supabase } from "./supabase";
 
 function requireSupabase() {

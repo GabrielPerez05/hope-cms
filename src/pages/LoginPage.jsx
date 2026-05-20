@@ -1,3 +1,8 @@
+// Author: M2 Timothy John Gandeza
+// LoginPage — entry point for both email/password and Google OAuth sign-in.
+// Validates credentials client-side before calling Supabase, then navigates to
+// /customers on success. Inactive users are bounced back here with ?error= from
+// the auth callback after the login guard fires in AuthContext.
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -11,6 +16,7 @@ export function LoginPage() {
     useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  // OAuth redirects back with ?error= when the login guard blocks an INACTIVE user
   const urlError = new URLSearchParams(location.search).get("error");
 
   useEffect(() => {

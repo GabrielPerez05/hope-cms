@@ -1,3 +1,9 @@
+// Author: M5 Clark Kent Zuñiga
+// sprint2-viewonly-softdelete.test.jsx — Sprint 2 M5 view-only and soft-delete tests.
+// Verifies that Sales, SalesDetail, Products, and CustomerDetail pages render zero
+// mutation buttons for all three user types (USER, ADMIN, SUPERADMIN).
+// Also covers: USER redirected from /deleted-customers to /customers via
+// AdminOnlyRoute, and ADMIN successfully recovering a soft-deleted customer.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

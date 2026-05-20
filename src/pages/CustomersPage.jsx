@@ -1,3 +1,9 @@
+// Author: M2 Timothy John Gandeza
+// CustomersPage — main customer list with rights-gated CRUD actions.
+// Add/Edit buttons render only when the user holds CUST_ADD/CUST_EDIT rights.
+// Soft-delete is restricted to SUPERADMIN with CUST_DEL right (never just ADMIN).
+// The stamp audit column is only rendered for ADMIN and SUPERADMIN user types.
+// USERs only see ACTIVE customers; ADMIN/SUPERADMIN see all records.
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
