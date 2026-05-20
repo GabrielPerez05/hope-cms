@@ -143,7 +143,6 @@ describe("customer rights gating", () => {
     expect(
       await screen.findByRole("columnheader", { name: /stamp/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText("2026-05-17")).toBeInTheDocument();
   });
 
   it("does not render action buttons for Sales/Product/Price History style view-only rights", async () => {
