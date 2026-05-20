@@ -55,15 +55,24 @@ export function CustomerSalesSummaryPage() {
   const [sortDir, setSortDir] = useState("desc");
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getCustomerSalesSummary()
-      .then((data) => {
-        const visible = isAdmin ? data : data.filter((r) => r.record_status === "ACTIVE");
-        setRows(visible);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getCustomerSalesSummary();
+        if (!cancelled) {
+          const visible = isAdmin ? data : data.filter((r) => r.record_status === "ACTIVE");
+          setRows(visible);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, [isAdmin]);
 
   function handleSort(key) {

@@ -18,12 +18,21 @@ export function TopCustomersPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getTopCustomers(10)
-      .then(setCustomers)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getTopCustomers(10);
+        if (!cancelled) setCustomers(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <DataLoadingState label="Loading top customers…" />;

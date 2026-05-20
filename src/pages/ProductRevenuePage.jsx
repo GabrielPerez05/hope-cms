@@ -21,12 +21,21 @@ export function ProductRevenuePage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getProductRevenue()
-      .then(setProducts)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getProductRevenue();
+        if (!cancelled) setProducts(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = products.filter(
@@ -40,7 +49,6 @@ export function ProductRevenuePage() {
   const pageItems = getPageItems(filtered, currentPage, PAGE_SIZE);
 
   const totalRevenue = products.reduce((sum, p) => sum + Number(p.total_revenue || 0), 0);
-  const totalQty = products.reduce((sum, p) => sum + Number(p.total_quantity || 0), 0);
   const withSales = products.filter((p) => Number(p.total_revenue) > 0).length;
 
   if (loading) return <DataLoadingState label="Loading product revenue…" />;
