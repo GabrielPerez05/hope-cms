@@ -1,3 +1,10 @@
+// Author: M4 Rhyian Joshua Ticbobolan
+// AppShell.jsx — authenticated layout wrapper containing the navbar and sidebar.
+// isLinkVisible() gates each nav link by user type and rights:
+//   /admin             → ADMIN/SUPERADMIN or ADM_USER right
+//   /deleted-customers → ADMIN/SUPERADMIN only
+//   report links       → SUPERADMIN or PRICE_VIEW right
+// Groups with no visible links are hidden entirely from the sidebar.
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";

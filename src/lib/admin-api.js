@@ -1,3 +1,11 @@
+// Author: M1 Gabriel Red Ray Perez
+// admin-api.js — user management operations for the Admin module.
+// activateUser() and deactivateUser() both guard against SUPERADMIN targets
+// before writing. Role changes invoke the set_role_rights RPC (SECURITY DEFINER)
+// to reset all 9 rights to role defaults, bypassing the RLS policy that blocks
+// direct writes to SUPERADMIN-owned rows. CUST_DEL is excluded from the display
+// panel — it has no practical effect for non-SUPERADMIN accounts and SUPERADMIN
+// rows are already RLS-protected.
 import { supabase } from "./supabase";
 
 const MODULES = ["Customers", "Sales", "Products", "Admin"];

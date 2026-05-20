@@ -1,3 +1,11 @@
+-- Author: M3 Lars Ulrich Galamiton
+-- customer_rls.sql — Row Level Security policies for the customer table.
+-- SELECT: USERs see ACTIVE rows only; ADMIN/SUPERADMIN see all rows.
+-- INSERT: requires CUST_ADD right_value = 1.
+-- UPDATE (edit): requires CUST_EDIT right_value = 1.
+-- UPDATE (deactivate): requires CUST_DEL right_value = 1; enforces record_status = 'INACTIVE'.
+-- UPDATE (recover): ADMIN/SUPERADMIN only; enforces record_status = 'ACTIVE'.
+-- No DELETE policy — hard deletes are forbidden by spec.
 ALTER TABLE public.customer ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS customer_select_active_or_admin ON public.customer;

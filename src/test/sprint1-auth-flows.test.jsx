@@ -1,3 +1,10 @@
+// Author: M5 Clark Kent Zuñiga
+// sprint1-auth-flows.test.jsx — Sprint 1 authentication test suite.
+// Covers: Google OAuth PKCE flow initiation, email verification signup,
+// active session persistence, inactive login guard (signs out + surfaces error),
+// OAuth callback code exchange, inactive OAuth redirect to /login?error=,
+// unauthenticated route protection, and rights context loading on session.
+// All Supabase calls and React Router navigation are mocked via vi.hoisted().
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

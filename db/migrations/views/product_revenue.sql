@@ -1,5 +1,9 @@
--- SQL view: product_revenue
--- Shows total revenue per product using latest price
+-- Author: M3 Lars Ulrich Galamiton
+-- product_revenue.sql — SQL view: product_revenue
+-- Aggregates total quantity sold and total revenue per product across all
+-- salesDetail rows. Revenue = SUM(quantity × unitPrice) using each product's
+-- latest priceHist entry, resolved via a MAX(effdate) CTE subquery.
+-- Used by the ProductRevenuePage report in Sprint 3.
 
 CREATE OR REPLACE VIEW product_revenue AS
 WITH current_price AS (

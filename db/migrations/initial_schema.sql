@@ -1,4 +1,11 @@
--- Create customer table 
+-- Author: M3 Lars Ulrich Galamiton
+-- initial_schema.sql — Creates all HopeDB tables and seeds the full dataset:
+-- 82 customers, 124 sales transactions, ~250 salesDetail rows, 52 products,
+-- ~70 priceHist entries, and supporting employee/department/job/payment tables.
+-- The customer table includes record_status (DEFAULT 'ACTIVE') and audit stamp
+-- columns; no other table carries these. Run this first before any other migration.
+
+-- Create employee table
 CREATE TABLE employee (empno VARCHAR(5) NOT NULL PRIMARY KEY, 
 												lastname VARCHAR(15),  
 												firstname VARCHAR(15), 

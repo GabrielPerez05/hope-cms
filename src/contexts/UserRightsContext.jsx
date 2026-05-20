@@ -1,4 +1,9 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+﻿// Author: M4 Rhyian Joshua Ticbobolan
+// UserRightsContext — loads all 9 user_rights rows from Supabase on login and
+// exposes them as a flat map ({ CUST_VIEW: 1, CUST_ADD: 0, ... }). Re-fetches
+// whenever currentUser or session changes. Provides hasRight(), canEdit(),
+// isAdmin(), and loadUserRights() to any component via useRights().
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { RIGHT_NAMES } from "../lib/rights";
 import { supabase } from "../lib/supabase";
