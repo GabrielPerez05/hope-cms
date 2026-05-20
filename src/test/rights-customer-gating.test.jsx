@@ -1,3 +1,9 @@
+// Author: M4 Rhyian Joshua Ticbobolan
+// rights-customer-gating.test.jsx — Customer page rights-gating tests.
+// Verifies that Add, Edit, and Delete action buttons render only when the
+// corresponding right (CUST_ADD, CUST_EDIT, CUST_DEL) is enabled, and that
+// soft-delete is restricted to SUPERADMIN regardless of right value.
+// Also confirms Stamp column visibility for ADMIN/SUPERADMIN only.
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
