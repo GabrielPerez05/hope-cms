@@ -1,192 +1,177 @@
 # Hope CMS
 
-Sprint 1 - Weeks 1 & 2: Project setup, full CMS database, Email + Google OAuth, login guard.
+A web-based Customer Management System built with React and Supabase. Hope CMS allows businesses to manage customers, track sales transactions, browse product catalogues, generate reports, and control user access through a role-based permission system.
 
-## Project overview
+---
 
-- Vite + React 18 + Tailwind CSS front-end
-- Supabase JS client with `.env.example`
-- React Router v6 with protected routes
-- Professional login/register pages with modern split-screen styling
-- Placeholder CMS pages: `/customers`, `/sales`, `/products`, `/admin`, `/deleted-customers`, `/auth/callback`
-- Auth guard verifies `record_status === 'ACTIVE'`
+## Features
 
-## Sprint 1 - Weeks 1 & 2
+- **Authentication** — Email/password login and Google OAuth (PKCE flow) with email verification support
+- **Login Guard** — INACTIVE accounts are automatically blocked from signing in
+- **Customer Management** — Add, edit, and soft-delete customers; recover deleted customers
+- **Sales Tracking** — Browse all transactions and drill down to line items per transaction
+- **Product Catalogue** — View all products with current pricing and full price history
+- **Reports** — Customer Sales Summary, Top Customers, and Product Revenue dashboards
+- **Admin Panel** — Manage user accounts, roles, and individual permission flags
+- **Role-Based Access Control** — Three user types with 9 granular rights
+- **SUPERADMIN Protection** — SUPERADMIN rows are fully locked from modification at both UI and database (RLS) level
+- **Soft-Delete Only** — No hard deletes anywhere in the system; all removals set record_status = INACTIVE
+- **Row Level Security** — All Supabase tables are protected by RLS policies enforced at the database level
 
-**Theme:** Project setup, full CMS database with 82 customers, 124 sales, 52 products, Email + Google OAuth, and login guard.
+---
 
-| Sprint | Focus | Weeks | Team Total | Average / Member |
-| --- | --- | --- | --- | --- |
-| 1 | Project Setup, CMS Database & Authentication | 1-2 | 18 PRs | 4 PRs |
+## Tech Stack
 
-### M1 - Project Lead / Full-Stack Developer
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + Vite |
+| Routing | React Router v6 |
+| Styling | Tailwind CSS v4 |
+| Backend / Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth (Email + Google OAuth) |
+| Testing | Vitest + React Testing Library |
 
-Minimum PRs: 4
+---
 
-Expected outputs:
+## User Roles
 
-- GitHub repo created with branching strategy (`main`, `dev`, `feature/*`) documented in README
-- Vite + React 18 + Tailwind CSS scaffolded and running locally
-- Supabase JS client initialized; `.env.example` committed to repo
-- React Router v6 with `ProtectedRoute` blocking unauthenticated access
-- All placeholder pages wired: `/customers`, `/sales`, `/products`, `/admin`, `/deleted-customers`, `/auth/callback`
-- `dev` and `main` branches protected in GitHub with no direct pushes and PRs required
+| Role | Description |
+|---|---|
+| USER | Standard read-only access; sees only ACTIVE customers |
+| ADMIN | Can manage customers, activate/deactivate users, and recover deleted customers |
+| SUPERADMIN | Full access including soft-delete, rights management, and role assignment |
 
-Pull requests:
+### Granular Rights (9 total)
 
-- PR-01 `feat/project-scaffold` - Vite + React + Tailwind initial setup
-- PR-02 `feat/supabase-client` - Supabase JS client init + `.env` config
-- PR-03 `feat/routing-skeleton` - All CMS routes, `ProtectedRoute`, placeholder pages
-- PR-04 `chore/github-protection` - Branch protection rules + PR template
+| Right | Description |
+|---|---|
+| CUST_VIEW | View customer list |
+| CUST_ADD | Add new customers |
+| CUST_EDIT | Edit existing customers |
+| CUST_DEL | Soft-delete customers (SUPERADMIN only) |
+| SALES_VIEW | View sales transactions |
+| SD_VIEW | View sales detail / line items |
+| PROD_VIEW | View product catalogue |
+| PRICE_VIEW | View price history |
+| ADM_USER | Access the Admin panel |
 
-### M2 - Frontend Developer (UI/UX)
+---
 
-Minimum PRs: 4
+## Pages
 
-Expected outputs:
+| Route | Page | Access |
+|---|---|---|
+| /login | Login | Public |
+| /register | Register | Public |
+| /auth/callback | OAuth Callback | Public |
+| /customers | Customer List | Authenticated |
+| /customers/:custNo | Customer Detail + Sales History | Authenticated |
+| /sales | Sales Transactions | Authenticated |
+| /products | Product Catalogue + Price History | Authenticated |
+| /admin | User Management | ADMIN / SUPERADMIN / ADM_USER right |
+| /deleted-customers | Soft-Deleted Customers | ADMIN / SUPERADMIN only |
 
-- Login page with email/password form, "Sign in with Google" button, form validation, and clear error messages
-- Register page with First Name, Last Name, Username, Email, Password fields, and Google register button
-- App shell layout with Navbar, user display, logout, and Sidebar CMS links for Customers, Sales, Products, Admin, and Deleted Customers
-- `/auth/callback` page with loading spinner during OAuth session exchange
-- Responsive pages across mobile and desktop
+---
 
-Pull requests:
+## Getting Started
 
-- PR-01 `feat/ui-login-page` - Login form with email + Google OAuth button
-- PR-02 `feat/ui-register-page` - Registration form with validation
-- PR-03 `feat/ui-app-shell` - Navbar, CMS sidebar, layout wrapper
-- PR-04 `feat/ui-auth-callback` - `/auth/callback` loading page
+### Prerequisites
 
-### M3 - Backend / Database Engineer
+- Node.js 18+
+- A Supabase project
 
-Minimum PRs: 4
+### Installation
 
-Expected outputs:
+```bash
+git clone https://github.com/GabrielPerez05/hope-cms.git
+cd hope-cms
+npm install
+```
 
-- Supabase project created; URL and anon key shared via `.env.example`
-- All 5 HopeDB tables seeded: `customer` (82 rows), `sales` (124 rows), `salesDetail` (~250 rows), `product` (52 rows), `priceHist` (~70 rows)
-- Rights scripts executed: `user`, `Module`, `user_module`, `rights`, `UserModule_Rights` tables seeded
-- `record_status` defaulting to `ACTIVE` and stamp columns added to customer table only; other tables unchanged
-- 4 modules seeded: `Cust_Mod`, `Sales_Mod`, `Prod_Mod`, `Adm_Mod`
-- 9 rights seeded: `CUST_VIEW`, `CUST_ADD`, `CUST_EDIT`, `CUST_DEL`, `SALES_VIEW`, `SD_VIEW`, `PROD_VIEW`, `PRICE_VIEW`, `ADM_USER`
-- SUPERADMIN seeded: `jcesperanza@neu.edu.ph`, all 9 rights set to `1`
-- All SQL committed to `db/migrations`; ERD committed to `docs`
+### Environment Variables
 
-Pull requests:
+Copy `.env.example` to `.env` and fill in your Supabase credentials:
 
-- PR-01 `db/initial-schema` - HopeDB 5 tables + `record_status` and stamp columns on customer only
-- PR-02 `db/rights-seed` - 4 modules + 9 rights + SUPERADMIN seed
-- PR-03 `docs/db-erd` - ERD diagram showing 5 table relationships
-- PR-04 `db/verify-seed` - SQL verification queries for row counts and FK checks
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+```
 
-### M4 - Rights & Authentication Specialist
+### Running the App
 
-Minimum PRs: 4
+```bash
+npm run dev
+```
 
-Expected outputs:
+---
 
-- `AuthContext.jsx` wraps app and provides `currentUser` state via `onAuthStateChange`
-- Email/password auth with `supabase.auth.signUp()` and `signIn()` wired to Register and Login forms
-- Google OAuth with `supabase.auth.signInWithOAuth({ provider: 'google' })` wired to Google buttons
-- `/auth/callback` route processes OAuth redirect, runs login guard, and navigates to `/customers` or `/login?error`
-- Login guard checks `record_status = 'ACTIVE'` on every `SIGNED_IN` event and signs out with an error if inactive
-- `provision_new_user()` trigger fires on `auth.users` insert; creates USER/INACTIVE row; inserts 4 module rows; inserts 9 rights rows
-- Default provisioned rights: `CUST_VIEW`, `SALES_VIEW`, `SD_VIEW`, `PROD_VIEW`, and `PRICE_VIEW` set to `1`; add/edit/delete/admin rights set to `0`
-- Google OAuth configured in Google Cloud Console and Supabase Dashboard with redirect URLs for localhost and production
+## Database Setup
 
-Pull requests:
+Run the following migration files in order in the Supabase SQL Editor:
 
-- PR-01 `feat/auth-context` - `AuthContext`, session listener, `currentUser` state
-- PR-02 `feat/auth-email` - `signUp()` + `signIn()` wired to Login/Register forms
-- PR-03 `feat/auth-google` - `signInWithOAuth` + `/auth/callback` + redirect URLs
-- PR-04 `db/trigger-provision-user` - `provision_new_user()` trigger with CMS rights defaults
+1. `db/migrations/initial_schema.sql`
+2. `db/migrations/rights_seed.sql`
+3. `db/migrations/04_provision_user_trigger.sql`
+4. `db/migrations/05_customer_status_columns.sql`
+5. `db/migrations/06_api_role_grants.sql`
+6. `db/migrations/rls/customer_rls.sql`
+7. `db/migrations/rls/admin_module_rls.sql`
+8. `db/migrations/rls/view_only_rls.sql`
+9. `db/migrations/views/customer_sales_summary.sql`
+10. `db/migrations/views/product_current_price.sql`
+11. `db/migrations/views/product_revenue.sql`
 
-### M5 - QA / Documentation Specialist
+---
 
-Minimum PRs: 2
+## Testing
 
-Expected outputs:
+```bash
+npm run test
+npx vitest run src/test/<file>.test.jsx
+```
 
-- Vitest + React Testing Library installed and configured
-- Test cases written and executed for email registration, Google OAuth new user flow, login guard blocking inactive users, and login guard allowing active users
-- Sprint 1 log completed with dates, tasks done, blockers, resolutions, and next sprint goals
-- README updated with clone, `npm install`, `.env` setup, `npm run dev`, and Supabase project URL
+### Test Coverage
 
-Pull requests:
+| File | Description |
+|---|---|
+| sprint1-auth-flows.test.jsx | Auth flows: Google OAuth, email signup, session persistence, inactive guard, route protection |
+| rights-customer-gating.test.jsx | Customer page rights gating for CUST_ADD, CUST_EDIT, CUST_DEL |
+| rights-sidebar-nav.test.jsx | Sidebar navigation visibility based on rights and user type |
+| sprint2-rights-27-cases.test.jsx | 3 user types x 9 rights = 27-case customer controls matrix |
+| sprint2-viewonly-softdelete.test.jsx | View-only enforcement and soft-delete recovery flows |
+| e2e-rights-production.test.jsx | Sprint 3 regression: ADM_USER gating, SUPERADMIN protection, OAuth, view-only |
+| sprint3-e2e-production.test.jsx | Full E2E: all user types across all pages and SUPERADMIN protection |
 
-- PR-01 `test/sprint1-auth-flows` - Email + Google OAuth + login guard test cases
-- PR-02 `docs/sprint1-log-readme` - Sprint 1 log + README instructions
+---
 
-## Branch strategy
+## Project Structure
 
-- `dev` is the main development branch
-- `main` is the protected production branch
-- `feature/*` used for each task or PR
-- All changes should go through pull requests
+```
+src/
+├── components/    Shared UI components (AppShell, Pagination, Toast, etc.)
+├── contexts/      AuthContext, UserRightsContext
+├── hooks/         useAuth, useRights, useHeartbeat
+├── lib/           API layer (customer-api, sales-product-api, admin-api, supabase)
+├── pages/         Page components (CustomersPage, SalesPage, AdminPage, etc.)
+└── test/          Vitest test suites
+db/
+└── migrations/    SQL migration files and RLS policies
+```
 
-## Local setup
+---
 
-1. Clone the repository:
+## Team
 
-   ```bash
-   git clone https://github.com/GabrielPerez05/hope-cms.git
-   cd hope-cms
-   ```
+| Member | Role |
+|---|---|
+| Gabriel Red Ray Perez | M1 — UI / Frontend |
+| Timothy John Gandeza | M2 — Backend / API |
+| Lars Ulrich Galamiton | M3 — Database / RLS |
+| Rhyian Joshua Ticbobolan | M4 — Rights and Authentication |
+| Clark Kent Zuñiga | M5 — QA / Documentation |
 
-2. Install dependencies:
+---
 
-   ```bash
-   npm install
-   ```
+## License
 
-3. Copy the environment example file:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Add the Supabase credentials to `.env`:
-
-   ```env
-   VITE_SUPABASE_URL=https://vxpeuscujtcfzowokmsr.supabase.co
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-5. Start the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-## Supabase project
-
-- Project URL: `https://vxpeuscujtcfzowokmsr.supabase.co`
-
-## Scripts
-
-- `npm run dev` - start development server
-- `npm run build` - build production assets
-- `npm run lint` - run ESLint
-- `npm run test` - run unit tests
-
-## Supabase
-
-- Use `src/lib/supabase.js` to initialize the client
-- Google OAuth and email/password auth are wired through `AuthContext`
-
-## Database implementation notes
-
-- The running app uses `public."user"`, `public.user_module`, and `public.user_rights` for profile, module, and rights data.
-- Rights columns are `"userId"`, `right_name`, and `right_value`.
-- RLS scripts use Supabase `auth.uid()` and the app's actual rights tables.
-- `initial_schema.sql` still includes support/source-data tables used by the seed relationships and verification checks: `employee`, `department`, `job`, `jobHistory`, and `payment`.
-
-## Sprint deliverables
-
-- `db/migrations/initial_schema.sql`
-- `db/migrations/rights_seed.sql`
-- `db/migrations/verify_seed.sql`
-- `docs/db-erd.png`
-- `docs/sprint1-log.md`
-- `.github/PULL_REQUEST_TEMPLATE.md`
+This project was developed as a capstone system for academic purposes.
