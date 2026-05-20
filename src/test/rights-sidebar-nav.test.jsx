@@ -32,6 +32,9 @@ import { AppShell } from "../components/AppShell";
 
 function renderAppShell({ rights = {}, userType = "USER" } = {}) {
   mocks.rights = {
+    CUST_VIEW: 1,
+    SALES_VIEW: 1,
+    PROD_VIEW: 1,
     ADM_USER: 0,
     ...rights,
   };

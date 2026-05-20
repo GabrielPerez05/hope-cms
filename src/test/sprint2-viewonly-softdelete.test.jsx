@@ -61,6 +61,18 @@ vi.mock("../contexts/user-rights-context", () => ({
     rights: mocks.rights,
     userType: mocks.currentUser.user_type,
     hasRight: (rightName) => mocks.rights[rightName] === 1,
+    canEdit: () => mocks.currentUser.user_type === "ADMIN" || mocks.currentUser.user_type === "SUPERADMIN",
+    isAdmin: () => mocks.currentUser.user_type === "ADMIN" || mocks.currentUser.user_type === "SUPERADMIN",
+  }),
+}));
+
+vi.mock("../hooks/useRights", () => ({
+  useRights: () => ({
+    rights: mocks.rights,
+    userType: mocks.currentUser.user_type,
+    hasRight: (rightName) => mocks.rights[rightName] === 1,
+    canEdit: () => mocks.currentUser.user_type === "ADMIN" || mocks.currentUser.user_type === "SUPERADMIN",
+    isAdmin: () => mocks.currentUser.user_type === "ADMIN" || mocks.currentUser.user_type === "SUPERADMIN",
   }),
 }));
 
@@ -209,7 +221,7 @@ describe("Sprint 2 M5 deleted customer recovery", () => {
     expect(await screen.findByText("RF Industries")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /recover/i }));
 
-    expect(recoverCustomer).toHaveBeenCalledWith("C0002");
+    expect(recoverCustomer).toHaveBeenCalledWith("C0002", expect.objectContaining({ user_type: "ADMIN" }));
     expect(screen.queryByText("RF Industries")).not.toBeInTheDocument();
   });
 });
